@@ -62,28 +62,29 @@ async function loadDashboard() {
         renderRecentDetections(recent.detections || []);
         setupBrandSelector();
     } catch (error) {
-        const recent = document.getElementById('recentDetections'); recent.textContent = 'Dashboard data could not be loaded.';
+        const recent = document.getElementById('recentDetections'); recent.textContent = window.dsTranslate('Dashboard data could not be loaded.');
     }
 }
 function renderRecentDetections(items) {
     const target = document.getElementById('recentDetections'); target.replaceChildren();
-    if (!items.length) { target.textContent = 'No scans yet. Start an analysis to see findings here.'; return; }
+    if (!items.length) { target.textContent = window.dsTranslate('No scans yet. Start an analysis to see findings here.'); return; }
     items.slice(0, 4).forEach(item => {
         const level = item.risk_level === 'Critical' ? 'High' : (item.risk_level || 'Low');
         const row = document.createElement('a'); row.className = 'recent-detection-item'; row.href = `/detection/${encodeURIComponent(item.id)}`;
         const icon = document.createElement('span'); icon.className = `recent-alert-icon ${level.toLowerCase()}`; icon.innerHTML = level === 'High' ? '<i class="bi bi-exclamation-triangle-fill"></i>' : level === 'Medium' ? '<i class="bi bi-exclamation-circle-fill"></i>' : '<i class="bi bi-info-circle-fill"></i>';
-        const copy = document.createElement('span'); copy.className = 'recent-detection-copy'; const title = document.createElement('strong'); title.textContent = item.target_name || 'Unknown target'; const sub = document.createElement('small'); sub.textContent = `${item.target_url || item.platform || 'Scan'} · ${item.created_at || ''}`; copy.append(title, sub);
-        const badge = document.createElement('span'); badge.className = `risk-pill risk-${level.toLowerCase()}`; badge.textContent = level; row.append(icon, copy, badge); target.append(row);
+        const copy = document.createElement('span'); copy.className = 'recent-detection-copy'; const title = document.createElement('strong'); title.textContent = item.target_name || window.dsTranslate('Unknown target'); const sub = document.createElement('small'); sub.textContent = `${item.target_url || item.platform || window.dsTranslate('Scan')} · ${item.created_at || ''}`; copy.append(title, sub);
+        const badge = document.createElement('span'); badge.className = `risk-pill risk-${level.toLowerCase()}`; badge.textContent = window.dsTranslate(level); row.append(icon, copy, badge); target.append(row);
     });
 }
 function drawThreatTrend(rows) {
-    const svg=document.getElementById('trendChart'), ns='http://www.w3.org/2000/svg', w=520,h=220,p={l:36,r:12,t:14,b:34}; svg.replaceChildren();
+    const svg=document.getElementById('trendChart'), ns='http://www.w3.org/2000/svg', w=520,h=220,p={l:36,r:12,t:14,b:34}; svg.replaceChildren(); svg.setAttribute('aria-label', window.dsTranslate('Daily scan risk trend for the last seven days'));
     const days=[]; for(let n=6;n>=0;n--){const d=new Date();d.setDate(d.getDate()-n);days.push(d);}
     const key=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`, byDay=Object.fromEntries(rows.map(r=>[r.day,r]));
     const series=['high','medium','low'], colors={high:'#f04455',medium:'#f5a623',low:'#17c995'}, all=days.flatMap(d=>series.map(s=>Number((byDay[key(d)]||{})[s]||0))), max=Math.max(4,...all), iw=w-p.l-p.r, ih=h-p.t-p.b;
     const add=(tag,attrs,label)=>{const el=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));if(label)el.textContent=label;svg.append(el);return el;};
     for(let i=0;i<=4;i++){const y=p.t+ih-i*ih/4;add('line',{x1:p.l,y1:y,x2:w-p.r,y2:y,class:'chart-gridline'});add('text',{x:p.l-8,y:y+4,'text-anchor':'end',class:'chart-axis-label'},String(Math.round(max*i/4)));}
-    days.forEach((d,i)=>add('text',{x:p.l+iw*i/6,y:h-8,'text-anchor':'middle',class:'chart-axis-label'},d.toLocaleDateString(undefined,{weekday:'short'})));
+    const locale = ({en:'en',hi:'hi-IN',es:'es',fr:'fr',de:'de',te:'te-IN'})[document.documentElement.lang] || 'en';
+    days.forEach((d,i)=>add('text',{x:p.l+iw*i/6,y:h-8,'text-anchor':'middle',class:'chart-axis-label'},d.toLocaleDateString(locale,{weekday:'short'})));
     series.forEach(s=>{const pts=days.map((d,i)=>[p.l+iw*i/6,p.t+ih-Number((byDay[key(d)]||{})[s]||0)/max*ih]);add('polyline',{points:pts.map(x=>x.join(',')).join(' '),fill:'none',stroke:colors[s],'stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'});pts.forEach(([x,y])=>add('circle',{cx:x,cy:y,r:3.5,fill:colors[s]}));});
 }
 function setupBrandSelector(){const sel=document.getElementById('dashboardBrandSelect');if(!sel||!sel.value)return;const update=()=>{const id=sel.value,name=sel.selectedOptions[0]?.textContent||'Brand';document.getElementById('dashboardBrandName').textContent=name;document.getElementById('dashboardSocialLink').href=`/social-monitor?brand_id=${encodeURIComponent(id)}`;document.getElementById('dashboardAppLink').href=`/app-monitor?brand_id=${encodeURIComponent(id)}`;};sel.addEventListener('change',update);update();}

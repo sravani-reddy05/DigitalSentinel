@@ -89,8 +89,12 @@ button, input, textarea, select {
     padding: 24px 16px;
     display: flex;
     flex-direction: column;
-    background: var(--navy);
-    color: #d0d5dd;
+    background:
+        radial-gradient(ellipse at 0% 0%, rgba(47, 175, 162, 0.22), transparent 38%),
+        radial-gradient(ellipse at 100% 72%, rgba(91, 109, 224, 0.2), transparent 42%),
+        radial-gradient(ellipse at 50% 100%, rgba(22, 143, 145, 0.3), transparent 38%),
+        linear-gradient(165deg, #122c42 0%, #172b48 52%, #202b50 100%);
+    color: #e1eaf2;
     overflow-y: auto;
 }
 
@@ -143,7 +147,7 @@ button, input, textarea, select {
 
 .sidebar-label {
     padding: 15px 12px 9px;
-    color: #77849a;
+    color: #88a9b7;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 1.4px;
@@ -160,7 +164,7 @@ button, input, textarea, select {
     gap: 12px;
     padding: 11px 13px;
     border-radius: 10px;
-    color: #c4ccda;
+    color: #d0dce6;
     font-size: 13px;
     font-weight: 500;
     transition: background 0.2s ease, color 0.2s ease;
@@ -173,13 +177,13 @@ button, input, textarea, select {
 .sidebar-nav a:hover,
 .sidebar-nav a:focus-visible {
     color: #fff;
-    background: var(--navy-soft);
+    background: rgba(111, 190, 190, 0.14);
 }
 
 .sidebar-nav a.active {
     color: #fff;
-    background: var(--primary);
-    box-shadow: 0 5px 15px rgba(66, 99, 235, 0.22);
+    background: linear-gradient(110deg, #168f91, #536bd0);
+    box-shadow: 0 6px 18px rgba(29, 133, 151, 0.28);
 }
 
 .sidebar-footer {
@@ -187,8 +191,11 @@ button, input, textarea, select {
     align-items: center;
     gap: 10px;
     margin-top: auto;
-    padding: 18px 9px 0;
-    border-top: 1px solid #293548;
+    padding: 12px 10px;
+    border: 1px solid rgba(182, 213, 221, 0.2);
+    border-radius: 12px;
+    background: linear-gradient(110deg, rgba(22, 143, 145, 0.24), rgba(83, 107, 208, 0.2));
+    box-shadow: 0 8px 22px rgba(7, 18, 38, 0.18);
 }
 
 .sidebar-footer strong,
@@ -197,12 +204,12 @@ button, input, textarea, select {
 }
 
 .sidebar-footer strong {
-    color: #e4e7ec;
+    color: #f2f7fa;
     font-size: 11px;
 }
 
 .sidebar-footer small {
-    color: #98a2b3;
+    color: #a9bdca;
     font-size: 10px;
 }
 

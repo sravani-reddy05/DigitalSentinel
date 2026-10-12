@@ -140,6 +140,9 @@ document.getElementById('appScanForm').addEventListener('submit', async event =>
         const title = document.createElement('div');
         title.className = `scan-risk-level risk-${level.toLowerCase()}`;
         title.textContent = `${window.dsTranslate ? window.dsTranslate('Risk') : 'Risk'}: ${window.dsTranslate ? window.dsTranslate(level) : level}`;
+        const nameAnalysis = result.analysis || {};
+        const nameMatch = document.createElement('p');
+        nameMatch.textContent = `Name similarity: ${Number(nameAnalysis.similarity || 0)}% · ${nameAnalysis.lookalike_detected ? 'Possible look-alike name detected' : nameAnalysis.contains_brand ? 'Brand name appears in listing name' : 'No strong name match detected'}`;
         const score = document.createElement('p');
         score.textContent = `Score: ${result.risk.risk_score}/100. ${result.notice || ''}`;
         const basis = document.createElement('p'); basis.className = 'small text-muted';
@@ -156,7 +159,7 @@ document.getElementById('appScanForm').addEventListener('submit', async event =>
         link.href = `/detection/${encodeURIComponent(result.detection_id)}`;
         link.className = 'btn btn-sm btn-outline-success';
         link.textContent = window.dsTranslate ? window.dsTranslate('Review this finding') : 'Review this finding';
-        message.append(title, score, basis, reasons, link);
+        message.append(title, nameMatch, score, basis, reasons, link);
         loadRecentAppAnalyses();
     } catch (error) {
         message.className = 'mt-3 alert alert-danger';

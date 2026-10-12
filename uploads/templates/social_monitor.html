@@ -171,8 +171,8 @@ function renderSocialAssessment(result) {
     meter.style.width = `${score}%`;
     meter.className = `assessment-meter-fill assessment-risk-${level.toLowerCase()}`;
 
-    const nameStatus = username.likely_misspelling
-        ? `Possible misspelling or look-alike name (${username.similarity}% similarity)`
+    const nameStatus = username.lookalike_detected
+        ? `Look-alike name detected (${username.similarity}% similarity)`
         : username.contains_brand
             ? `Brand name appears in username (${username.similarity}% similarity)`
             : `Name similarity: ${username.similarity || 0}%`;
