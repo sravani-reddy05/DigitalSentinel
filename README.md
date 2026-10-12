@@ -1,6 +1,4 @@
 # DigitalSentinel
-<<<<<<< HEAD
-
 DigitalSentinel is a Flask and SQLite application for reviewing possible brand
 impersonation indicators. Results are heuristic review signals, not proof of
 fraud. Social profiles and app listings are entered manually; the project does
@@ -31,7 +29,7 @@ Set `SECRET_KEY` to a long random value for deployment. Keep `.env` private.
 
 ## Languages and URL reputation
 
-Use the language menu for English, Hindi, Spanish, French, German, or Telugu.
+Use the language menu for English, Hindi, or Telugu.
 Voice recognition follows the assistant language selection when the browser
 supports that recognition language. Groq replies are asked to use the selected
 language; the no-key fallback has translated built-in guidance.
@@ -57,11 +55,15 @@ findings should be treated as confirmed without human review.
 
 ## Deploy on Render
 
-The included `Procfile` runs Gunicorn. Configure `SECRET_KEY`, `DATABASE_PATH`,
-and optionally `GROQ_API_KEY` and `GROQ_MODEL` in Render environment settings.
-Use persistent disk storage for SQLite because ephemeral files can be lost on
-restart or redeployment. Add authentication and authorization before exposing
-investigation data publicly. Static dependencies currently use public CDNs.
-=======
-AI-powered digital risk detection platform for identifying potential phishing URLs, social media scams, and suspicious files.
->>>>>>> 83e23285a7eae1712e83a70904044c5165a5717f
+The included `render.yaml` configures a Gunicorn web service and a persistent
+disk for the SQLite database and uploaded brand logos. In Render, create a new
+Blueprint from this repository and apply the `render.yaml` configuration. The
+Blueprint generates `SECRET_KEY` and disables demo data by default. Add
+`GROQ_API_KEY`, `VIRUSTOTAL_API_KEY`, and/or `SAFE_BROWSING_API_KEY` through
+the Render dashboard only if those integrations are needed; never put secret
+values in `render.yaml` or source control.
+
+The persistent disk requires a paid Render instance. The deployed app currently
+does not provide user authentication or authorization; do not expose
+investigation data publicly until access controls are added. Static
+dependencies currently use public CDNs.

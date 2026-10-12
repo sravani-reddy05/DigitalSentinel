@@ -14,7 +14,10 @@ class Config:
     )
     SEED_DEMO_DATA = os.getenv("SEED_DEMO_DATA", "true").lower() == "true"
 
-    UPLOAD_FOLDER = str(BASE_DIR / "uploads")
+    UPLOAD_FOLDER = os.getenv(
+        "UPLOAD_FOLDER",
+        str(BASE_DIR / "uploads")
+    )
 
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 
