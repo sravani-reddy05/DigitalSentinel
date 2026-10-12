@@ -1,4 +1,5 @@
 # DigitalSentinel
+<<<<<<< HEAD
 
 DigitalSentinel is a Flask and SQLite application for reviewing possible brand
 impersonation indicators. Results are heuristic review signals, not proof of
@@ -61,3 +62,6 @@ and optionally `GROQ_API_KEY` and `GROQ_MODEL` in Render environment settings.
 Use persistent disk storage for SQLite because ephemeral files can be lost on
 restart or redeployment. Add authentication and authorization before exposing
 investigation data publicly. Static dependencies currently use public CDNs.
+=======
+AI-powered digital risk detection platform for identifying potential phishing URLs, social media scams, and suspicious files.
+>>>>>>> 83e23285a7eae1712e83a70904044c5165a5717f
