@@ -41,7 +41,7 @@
     <div class="col-12 col-xl-7">
         <section class="content-card social-form-card">
             <div class="form-section-heading"><span class="metric-icon blue"><i class="bi bi-people"></i></span><div><h3>Analyze a social profile</h3><p>Enter the public profile details you want to review.</p></div></div>
-            <form id="socialScanForm">
+            <form id="socialScanForm" novalidate>
                 <p class="small text-muted">Comparison brand: <strong id="selectedBrandName">{{ brands|selectattr('id', 'equalto', selected_brand_id)|map(attribute='brand_name')|first if selected_brand_id else (brands[0].brand_name if brands else 'Select a brand') }}</strong></p>
                 <div class="row g-3">
                 <div class="col-12 col-md-6"><label class="form-label" for="socialUsername">Username *</label>
@@ -104,6 +104,16 @@
 document.getElementById('socialScanForm').addEventListener('submit', async event => {
     event.preventDefault();
     const message = document.getElementById('socialMessage');
+    const invalidField = event.currentTarget.querySelector(':invalid');
+    if (invalidField) {
+        const label = event.currentTarget.querySelector(`label[for="${invalidField.id}"]`);
+        message.className = 'mt-3 alert alert-warning';
+        message.textContent = invalidField.id === 'socialBrand' && !invalidField.options.length
+            ? 'Create a brand profile before scanning.'
+            : `Please complete ${label ? label.textContent.replace('*', '').trim().toLowerCase() : 'the required fields'} before scanning.`;
+        invalidField.focus();
+        return;
+    }
     message.textContent = window.dsTranslate ? window.dsTranslate('Analyzing profile…') : 'Analyzing profile…';
 
     const payload = new FormData();

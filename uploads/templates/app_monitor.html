@@ -55,7 +55,7 @@
     <div class="col-12 col-xl-7">
         <section class="content-card app-form-card">
             <div class="form-section-heading"><span class="metric-icon blue"><i class="bi bi-phone"></i></span><div><h3>Analyze an app listing</h3><p>Enter public listing details to review possible brand impersonation.</p></div></div>
-            <form id="appScanForm">
+            <form id="appScanForm" novalidate>
                 <div class="row g-3">
                 <div class="col-12 col-md-6"><label class="form-label" for="appName">App name *</label>
                 <input class="form-control" id="appName" maxlength="150" placeholder="e.g. Brand Rewards Center" required></div>
@@ -113,6 +113,16 @@
 document.getElementById('appScanForm').addEventListener('submit', async event => {
     event.preventDefault();
     const message = document.getElementById('appMessage');
+    const invalidField = event.currentTarget.querySelector(':invalid');
+    if (invalidField) {
+        const label = event.currentTarget.querySelector(`label[for="${invalidField.id}"]`);
+        message.className = 'mt-3 alert alert-warning';
+        message.textContent = invalidField.id === 'appBrand' && !invalidField.options.length
+            ? 'Create a brand profile before scanning.'
+            : `Please complete ${label ? label.textContent.replace('*', '').trim().toLowerCase() : 'the required fields'} before scanning.`;
+        invalidField.focus();
+        return;
+    }
     message.textContent = window.dsTranslate ? window.dsTranslate('Analyzing app listing…') : 'Analyzing app listing…';
 
     const payload = new FormData();
