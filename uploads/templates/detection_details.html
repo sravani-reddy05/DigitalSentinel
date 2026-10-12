@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Detection Details | DigitalSentinel{% endblock %}
+{% block page_heading %}Detection Details{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <a href="/detections" class="text-link"><i class="bi bi-arrow-left"></i> Back to detections</a>
+    <h1 class="mt-3">Detection Review</h1>
+    <p>Review the available evidence before deciding on the next action.</p>
+</div>
+
+{% if detection %}
+<section class="content-card">
+    <div class="d-flex flex-wrap justify-content-between gap-3">
+        <div>
+            <span class="eyebrow">TARGET</span>
+            <h2>{{ detection.target_name }}</h2>
+            <p class="text-muted">{{ detection.platform }} · Record #{{ detection.id }}</p>
+        </div>
+        <div class="risk-score-panel">
+            <span>Risk score</span>
+            <strong>{{ detection.risk_score }}/100</strong>
+            <span>{{ detection.risk_level }}</span>
+        </div>
+    </div>
+
+    <hr>
+    <div class="row g-4">
+        <div class="col-12 col-md-6">
+            <h4>Submitted details</h4>
+            <p><strong>Publisher:</strong> {{ detection.publisher or "Not provided" }}</p>
+            <p><strong>URL:</strong>
+                {% if detection.target_url %}
+                <a href="{{ detection.target_url }}" target="_blank" rel="noopener noreferrer">
+                    Open submitted URL
+                </a>
+                {% else %}Not provided{% endif %}
+            </p>
+            <p><strong>Created:</strong> {{ detection.created_at or "Not available" }}</p>
+            <p><strong>Current status:</strong> {{ detection.status }}</p>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <h4>Why was it flagged?</h4>
+            {% if detection.reasons %}
+            <ul class="feature-list">
+                {% for reason in detection.reasons %}
+                <li><i class="bi bi-info-circle"></i> {{ reason }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No explanation was stored for this record.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="alert alert-warning mt-3">
+        This score is a heuristic review signal, not a probability. Low: 0–34,
+        Medium: 35–59, High: 60–100. Confirm information independently before
+        treating a profile or app as malicious.
+    </div>
+
+    <form id="statusForm" class="row g-3 align-items-end">
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="newStatus">Update review status</label>
+            <select id="newStatus" class="form-select">
+                {% for status in ["Needs Review", "Under Investigation", "Confirmed Threat", "False Positive", "Resolved"] %}
+                <option value="{{ status }}" {% if detection.status == status %}selected{% endif %}>
+                    {{ status }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-md-3">
+            <button class="btn btn-primary w-100" type="submit">Save status</button>
+        </div>
+        <div class="col-12" id="statusMessage" aria-live="polite"></div>
+    </form>
+</section>
+{% else %}
+<section class="content-card">
+    <h2>Detection not found</h2>
+    <p>The requested record does not exist or may have been removed.</p>
+    <a href="/detections" class="btn btn-primary">Return to detections</a>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if detection %}
+<script>
+document.getElementById('statusForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const message = document.getElementById('statusMessage');
+    message.textContent = 'Saving status…';
+
+    try {
+        const response = await fetch('/api/detections/{{ detection.id }}/status', {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({status: document.getElementById('newStatus').value})
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not update status');
+
+        message.className = 'col-12 text-success';
+        message.textContent = 'Status updated successfully.';
+    } catch (error) {
+        message.className = 'col-12 text-danger';
+        message.textContent = error.message;
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

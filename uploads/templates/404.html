@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found | DigitalSentinel{% endblock %}
+{% block page_heading %}Page Not Found{% endblock %}
+
+{% block content %}
+<div class="empty-state">
+    <div class="empty-state-icon"><i class="bi bi-compass"></i></div>
+    <span class="eyebrow">ERROR 404</span>
+    <h1>We couldn't find that page</h1>
+    <p>The page may have moved, the address may be incorrect, or the link may be unavailable.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+        <a href="/" class="btn btn-primary">
+            <i class="bi bi-grid"></i> Go to Dashboard
+        </a>
+        <a href="/detections" class="btn btn-outline-secondary">
+            View Detections
+        </a>
+    </div>
+</div>
+{% endblock %}

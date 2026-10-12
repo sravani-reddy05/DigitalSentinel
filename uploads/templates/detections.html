@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Detections | DigitalSentinel{% endblock %}
+{% block page_heading %}Detection Center{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <span class="eyebrow">THREAT REVIEW WORKSPACE</span>
+    <h1>Detection Center</h1>
+    <p>Review indicators, inspect reasons and update the investigation status.</p>
+</div>
+
+<section class="content-card">
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="filterPlatform">Platform</label>
+            <select id="filterPlatform" class="form-select">
+                <option value="">All platforms</option>
+                <option>Instagram</option><option>Facebook</option>
+                <option>X</option><option>TikTok</option>
+                <option>Google Play</option><option>Apple App Store</option>
+                <option>Other</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="searchDetections">Search</label>
+            <input id="searchDetections" class="form-control" placeholder="Target or description">
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="filterStatus">Review status</label>
+            <select id="filterStatus" class="form-select">
+                <option value="">All statuses</option>
+                <option>Needs Review</option><option>Under Investigation</option>
+                <option>Confirmed Threat</option><option>False Positive</option>
+                <option>Resolved</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-4 d-flex align-items-end">
+            <button id="applyFilters" class="btn btn-primary me-2">Apply filters</button>
+            <button id="clearFilters" class="btn btn-outline-secondary">Clear</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+            <tr><th>Target</th><th>Platform</th><th>Score</th><th>Risk</th><th>Status</th><th>Created</th><th></th></tr>
+            </thead>
+            <tbody id="detectionsBody">
+            <tr><td colspan="7" class="text-center text-muted">Loading detections…</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p id="detectionsMessage" class="small text-muted" aria-live="polite"></p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadDetections() {
+    const body = document.getElementById('detectionsBody');
+    const message = document.getElementById('detectionsMessage');
+    body.replaceChildren();
+    message.textContent = 'Loading…';
+
+    const params = new URLSearchParams(window.location.search);
+    const platform = document.getElementById('filterPlatform').value || params.get('platform') || '';
+    const status = document.getElementById('filterStatus').value || params.get('status') || '';
+    document.getElementById('filterPlatform').value = platform;
+    document.getElementById('filterStatus').value = status;
+    const search = document.getElementById('searchDetections').value.trim().toLowerCase();
+    if (platform) params.set('platform', platform);
+    if (status) params.set('status', status);
+
+    try {
+        const response = await fetch(`/api/detections?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load detections');
+        const allItems = Array.isArray(data) ? data : (data.detections || []);
+        const items = allItems.filter(item => !search || `${item.target_name} ${item.description || ''} ${item.publisher || ''}`.toLowerCase().includes(search));
+
+        if (!items.length) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 7;
+            cell.className = 'text-center text-muted py-4';
+            cell.textContent = 'No records found. Try another filter or run a scan.';
+            row.appendChild(cell);
+            body.appendChild(row);
+            message.textContent = '';
+            return;
+        }
+
+        items.forEach(item => {
+            const row = document.createElement('tr');
+            const values = [
+                item.target_name || 'Unknown',
+                item.platform || '—',
+                `${item.risk_score ?? 0}/100`,
+                item.risk_level || 'Unknown',
+                item.status || 'Needs Review',
+                item.created_at || '—'
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            const actionCell = document.createElement('td');
+            const link = document.createElement('a');
+            link.href = `/detection/${encodeURIComponent(item.id)}`;
+            link.className = 'btn btn-sm btn-outline-primary';
+            link.textContent = 'Review';
+            actionCell.appendChild(link);
+            row.appendChild(actionCell);
+            body.appendChild(row);
+        });
+        message.textContent = `${items.length} record(s) displayed.`;
+    } catch (error) {
+        message.textContent = error.message;
+        body.innerHTML = '<tr><td colspan="7" class="text-danger">Unable to load records. Check the Flask terminal and API response.</td></tr>';
+    }
+}
+
+document.getElementById('applyFilters').addEventListener('click', loadDetections);
+document.getElementById('searchDetections').addEventListener('input', loadDetections);
+document.getElementById('clearFilters').addEventListener('click', () => {
+    document.getElementById('filterPlatform').value = '';
+    document.getElementById('filterStatus').value = '';
+    loadDetections();
+});
+loadDetections();
+</script>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}App Monitoring | DigitalSentinel{% endblock %}
+{% block page_heading %}App Monitoring{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <span class="eyebrow">APPLICATION LISTING ANALYSIS</span>
+    <h1>App Monitoring</h1>
+    <p>Review app listings for possible brand-name misuse, suspicious descriptions, and logo similarity.</p>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    Enter listing details manually. When a listing URL is supplied, configured VirusTotal and Google Safe Browsing keys check its public URL reputation.
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-7">
+        <section class="content-card">
+            <h3>Analyze an app listing</h3>
+            <form id="appScanForm">
+                <label class="form-label" for="appName">App name *</label>
+                <input class="form-control mb-3" id="appName" maxlength="150"
+                       placeholder="e.g. Brand Rewards Center" required>
+
+                <label class="form-label" for="appPlatform">Store *</label>
+                <select class="form-select mb-3" id="appPlatform">
+                    <option>Google Play</option>
+                    <option>Apple App Store</option>
+                    <option>Other</option>
+                </select>
+
+                <label class="form-label" for="appBrand">Company profile *</label>
+                <select class="form-select mb-3" id="appBrand" required>
+                    {% for brand in brands %}<option value="{{ brand.id }}" {% if selected_brand_id == brand.id %}selected{% endif %}>{{ brand.brand_name }}</option>{% endfor %}
+                </select>
+
+                <label class="form-label" for="appPublisher">Publisher / developer</label>
+                <input class="form-control mb-3" id="appPublisher" maxlength="200"
+                       placeholder="Publisher name">
+
+                <label class="form-label" for="appUrl">Listing URL</label>
+                <input class="form-control mb-3" id="appUrl" type="url"
+                       placeholder="https://example.com/listing">
+
+                <label class="form-label" for="appIcon">App icon (optional)</label>
+                <input class="form-control mb-3" id="appIcon" type="file" accept="image/png,image/jpeg,image/webp">
+
+                <label class="form-label" for="appDescription">App description</label>
+                <textarea class="form-control mb-3" id="appDescription" rows="4"
+                          maxlength="2000" placeholder="Enter the listing description…"></textarea>
+
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search"></i> Analyze App
+                </button>
+            </form>
+            <div id="appMessage" class="mt-3" aria-live="polite"></div>
+        </section>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <section class="content-card">
+            <h3>Analysis indicators</h3>
+            <div class="indicator-item"><i class="bi bi-fonts"></i><span><strong>Name similarity</strong><small>How closely the listing name matches the brand</small></span></div>
+            <div class="indicator-item"><i class="bi bi-person-badge"></i><span><strong>Publisher context</strong><small>Publisher information is recorded for review</small></span></div>
+            <div class="indicator-item"><i class="bi bi-chat-square-text"></i><span><strong>Description phrases</strong><small>Potentially risky wording in the submitted text</small></span></div>
+            <div class="indicator-item"><i class="bi bi-shield-check"></i><span><strong>Listing URL reputation</strong><small>VirusTotal and Google Safe Browsing results, when configured</small></span></div>
+            <p class="small text-muted mt-3">Publisher identity is not independently verified by this form.</p>
+            <p class="small text-muted">Risk score is a heuristic review signal, not a probability. Low: 0–34, Medium: 35–59, High: 60–100.</p>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('appScanForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const message = document.getElementById('appMessage');
+    message.textContent = window.dsTranslate ? window.dsTranslate('Analyzing app listing…') : 'Analyzing app listing…';
+
+    const payload = new FormData();
+    payload.append('app_name', document.getElementById('appName').value.trim());
+    payload.append('brand_id', document.getElementById('appBrand').value);
+    payload.append('platform', document.getElementById('appPlatform').value);
+    payload.append('publisher', document.getElementById('appPublisher').value.trim());
+    payload.append('app_url', document.getElementById('appUrl').value.trim());
+    payload.append('description', document.getElementById('appDescription').value.trim());
+    if (document.getElementById('appIcon').files[0]) payload.append('app_icon', document.getElementById('appIcon').files[0]);
+
+    try {
+        const response = await fetch('/api/apps/scan', {
+            method: 'POST',
+            body: payload
+        });
+        const result = await readScanResponse(response);
+        if (!response.ok) throw new Error(result.error || `Analysis failed (HTTP ${response.status}). Check the Flask terminal for details.`);
+        if (!result.risk || !Number.isFinite(Number(result.risk.risk_score))) throw new Error('Analysis response did not include a risk score. Please try again.');
+
+        message.className = 'mt-3 alert alert-success';
+        message.replaceChildren();
+
+        const level = result.risk.risk_level;
+        const title = document.createElement('div');
+        title.className = `scan-risk-level risk-${level.toLowerCase()}`;
+        title.textContent = `${window.dsTranslate ? window.dsTranslate('Risk') : 'Risk'}: ${window.dsTranslate ? window.dsTranslate(level) : level}`;
+        const score = document.createElement('p');
+        score.textContent = `Score: ${result.risk.risk_score}/100. ${result.notice || ''}`;
+        const basis = document.createElement('p'); basis.className = 'small text-muted';
+        basis.textContent = 'Risk score is a heuristic review signal, not a probability. Low: 0–34, Medium: 35–59, High: 60–100.';
+        const reasons = document.createElement('ul'); reasons.className = 'scan-reasons';
+        (result.risk.reasons || []).forEach(reason => { const item = document.createElement('li'); item.textContent = reason; reasons.append(item); });
+        if (result.url_reputation) {
+            const providerResults = document.createElement('p');
+            providerResults.className = 'small';
+            providerResults.textContent = result.url_reputation.providers?.length ? `${result.url_reputation.providers.map(provider => `${provider.provider}: ${provider.status}${provider.malicious != null ? ` (${provider.malicious} malicious, ${provider.suspicious} suspicious)` : provider.threats_found != null ? ` (${provider.threats_found} threat matches)` : ''}`).join(' · ')}. ${result.url_reputation.message || ''}` : result.url_reputation.message;
+            message.append(providerResults);
+        } else { const providerResults = document.createElement('p'); providerResults.className = 'small text-muted'; providerResults.textContent = 'No listing URL supplied; URL reputation was not checked.'; message.append(providerResults); }
+        const link = document.createElement('a');
+        link.href = `/detection/${encodeURIComponent(result.detection_id)}`;
+        link.className = 'btn btn-sm btn-outline-success';
+        link.textContent = window.dsTranslate ? window.dsTranslate('Review this finding') : 'Review this finding';
+        message.append(title, score, basis, reasons, link);
+    } catch (error) {
+        message.className = 'mt-3 alert alert-danger';
+        message.textContent = error.message;
+    }
+});
+
+async function readScanResponse(response) {
+    const body = await response.text();
+    try { return body ? JSON.parse(body) : {}; }
+    catch {
+        throw new Error(response.ok
+            ? 'The server returned an unreadable result. Restart the app and try again.'
+            : `The scan could not be completed (HTTP ${response.status}). Check that Flask is running, then try again.`);
+    }
+}
+</script>
+{% endblock %}

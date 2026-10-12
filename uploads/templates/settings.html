@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Settings | DigitalSentinel{% endblock %}
+{% block page_heading %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <span class="eyebrow">PLATFORM CONFIGURATION</span>
+    <h1>Settings</h1>
+    <p>Review application configuration and integration readiness.</p>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-lock"></i>
+    API credentials must be configured on the server in your local `.env` file or
+    deployment environment. Never enter or publish secrets in the browser.
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <section class="content-card h-100">
+            <h3>Application</h3>
+            <div class="settings-row">
+                <span><strong>Application name</strong><small>Project identity</small></span>
+                <span>DigitalSentinel</span>
+            </div>
+            <div class="settings-row">
+                <span><strong>Database</strong><small>Configured in server settings</small></span>
+                <span class="status-label">SQLite</span>
+            </div>
+            <div class="settings-row">
+                <span><strong>Analysis</strong><small>Heuristic signals and configured reputation integrations</small></span>
+                <span class="status-label">Review required</span>
+            </div>
+            <div class="settings-row">
+                <span><strong>Debug mode</strong><small>Set FLASK_DEBUG in your environment</small></span>
+                <span class="text-muted">Server-configured</span>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <section class="content-card h-100">
+            <h3>Integration readiness</h3>
+            <p class="text-muted">Status below describes the current implementation, not live connectivity.</p>
+            <div class="settings-row">
+                <span><strong>Groq assistant</strong><small>Requires a valid server-side API key</small></span>
+                <span class="status-label">{{ 'Configured' if groq_configured else 'Not configured' }}</span>
+            </div>
+            <div class="settings-row">
+                <span><strong>Instagram / Facebook</strong><small>Client placeholders only</small></span>
+                <span class="status-label">Not live</span>
+            </div>
+            <div class="settings-row">
+                <span><strong>App store lookup</strong><small>Client placeholder only</small></span>
+                <span class="status-label">Not live</span>
+            </div>
+            <div class="settings-row">
+                <span><strong>Voice interaction</strong><small>Browser support may vary</small></span>
+                <span class="status-label">Optional</span>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="content-card mt-4">
+    <h3>Configuration checklist</h3>
+    <ul class="feature-list">
+        <li>Keep `.env` out of GitHub.</li>
+        <li>Set a strong `SECRET_KEY` for deployment.</li>
+        <li>Set `GROQ_API_KEY` only if you want the AI assistant enabled.</li>
+        <li>Use HTTPS for a deployed application.</li>
+        <li>Configure authentication and authorization before exposing sensitive data.</li>
+    </ul>
+</section>
+{% endblock %}

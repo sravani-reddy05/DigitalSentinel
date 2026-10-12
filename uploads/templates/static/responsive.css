@@ -1,0 +1,230 @@
+
+/* Large laptops and smaller desktop screens */
+@media (max-width: 1200px) {
+    .page-content {
+        padding: 26px 24px;
+    }
+
+    .topbar {
+        padding-right: 24px;
+        padding-left: 24px;
+    }
+
+    .page-footer {
+        padding-right: 24px;
+        padding-left: 24px;
+    }
+
+    .content-card,
+    .metric-card {
+        padding: 20px;
+    }
+}
+
+/* Tablets and mobile devices */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform 0.25s ease, visibility 0.25s ease;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        visibility: visible;
+        box-shadow: 12px 0 40px rgba(16, 24, 40, 0.2);
+    }
+
+    .main-area {
+        margin-left: 0;
+    }
+
+    .topbar {
+        min-height: 68px;
+        padding: 12px 20px;
+    }
+
+    .page-content {
+        padding: 24px 20px;
+    }
+
+    .page-footer {
+        padding: 15px 20px;
+    }
+
+    .welcome-section {
+        padding: 23px;
+    }
+
+    .hero-visual { width:180px; height:140px; flex-basis:180px; transform:scale(.88); transform-origin:center right; margin-right:-14px; }
+}
+
+/* Phones */
+@media (max-width: 767.98px) {
+    .topbar {
+        gap: 10px;
+    }
+
+    .topbar-title {
+        font-size: 13px;
+    }
+
+    .topbar-subtitle {
+        max-width: 210px;
+        font-size: 10px;
+    }
+
+    .topbar-right {
+        gap: 8px;
+    }
+
+    .demo-pill {
+        padding: 6px 8px;
+        font-size: 10px;
+    }
+
+    .avatar {
+        width: 33px;
+        height: 33px;
+    }
+
+    .page-content {
+        padding: 20px 14px;
+    }
+
+    .page-footer {
+        padding: 14px;
+        font-size: 10px;
+    }
+
+    .welcome-section {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 21px;
+    }
+
+    .hero-visual { position:absolute; right:0; top:0; width:120px; height:112px; flex-basis:120px; opacity:.68; transform:scale(.7); transform-origin:top right; }
+    .welcome-section > div:first-child { position:relative; z-index:1; max-width:78%; }
+
+    .welcome-section .btn {
+        width: 100%;
+    }
+
+    .content-card,
+    .metric-card {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .metric-card {
+        min-height: 145px;
+    }
+
+    .metric-card h2 {
+        font-size: 25px;
+    }
+
+    .section-heading {
+        align-items: flex-start;
+    }
+
+    .table {
+        min-width: 650px;
+    }
+
+    .chat-header {
+        padding: 17px;
+    }
+
+    .chat-messages {
+        min-height: 250px;
+        padding: 16px;
+    }
+
+    .chat-bubble {
+        max-width: 95%;
+    }
+
+    .suggested-prompts {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .chat-input-area {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 15px 16px;
+    }
+
+    .chat-input-area .btn {
+        align-self: flex-end;
+    }
+
+    .settings-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .settings-row > span:last-child {
+        text-align: left;
+    }
+
+    .risk-score-panel {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .architecture-node {
+        padding: 16px;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 420px) {
+    .topbar {
+        padding: 11px;
+    }
+
+    .topbar-subtitle {
+        max-width: 160px;
+    }
+
+    .topbar-right .demo-pill {
+        display: none;
+    }
+
+    .page-content {
+        padding: 16px 11px;
+    }
+
+    .content-card,
+    .metric-card {
+        padding: 15px;
+    }
+
+    .welcome-section {
+        padding: 17px;
+    }
+
+    .welcome-section h1 {
+        font-size: 23px;
+    }
+
+    .page-intro h1 {
+        font-size: 25px;
+    }
+
+    .login-card {
+        padding: 26px 21px;
+    }
+}
+
+/* Avoid motion for users who request reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .metric-card,
+    .architecture-node {
+        transition: none;
+    }
+}

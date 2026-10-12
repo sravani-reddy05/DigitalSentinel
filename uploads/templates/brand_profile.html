@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Brand Profile | DigitalSentinel{% endblock %}
+{% block page_heading %}Brand Profile{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <span class="eyebrow">BRAND PROTECTION</span>
+    <h1>Brand Profile</h1>
+    <p>Configure each brand's name, official website, and approved reference logo for analysis.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-5">
+        <section class="content-card">
+            <h3>Register a brand</h3>
+            <p class="text-muted">Add the brand you want to evaluate. After saving, attach its approved logo on the brand card.</p>
+            <form id="brandForm">
+                <label class="form-label" for="brandName">Brand name *</label>
+                <input class="form-control mb-3" id="brandName" maxlength="120" required
+                       placeholder="e.g. Adidas">
+
+                <label class="form-label" for="brandWebsite">Official website</label>
+                <input class="form-control mb-3" id="brandWebsite" type="url"
+                       placeholder="https://www.example.com">
+
+                <label class="form-label" for="brandDescription">Description</label>
+                <textarea class="form-control mb-3" id="brandDescription" rows="4"
+                          maxlength="1000" placeholder="Describe the brand…"></textarea>
+
+                <button class="btn btn-primary w-100" type="submit">
+                    <i class="bi bi-plus-circle"></i> Save Brand
+                </button>
+            </form>
+            <div id="brandMessage" class="mt-3" aria-live="polite"></div>
+        </section>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <section class="content-card">
+            <div class="section-heading">
+                <div><h3>Current brand</h3><p>Brand used by the analysis forms</p></div>
+                <i class="bi bi-patch-check text-primary fs-3"></i>
+            </div>
+            <div id="currentBrand">
+                <p class="text-muted">Loading brand profile…</p>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadCurrentBrand() {
+    const container = document.getElementById('currentBrand');
+    try {
+        const response = await fetch('/api/brands');
+        if (!response.ok) throw new Error('Could not load brands');
+        const payload = await response.json();
+        const brands = payload.brands || [];
+        if (!brands.length) { container.textContent = 'No brand registered yet. Use the form to add one.'; return; }
+        container.replaceChildren();
+        brands.forEach(brand => {
+            const card = document.createElement('div'); card.className = 'brand-list-item content-card mb-3';
+            const name = document.createElement('h2'); name.textContent = brand.brand_name || 'Unnamed brand';
+            const website = document.createElement('p'); website.textContent = `Website: ${brand.official_website || 'Not provided'}`;
+            const description = document.createElement('p'); description.textContent = brand.description || 'No description provided.';
+            card.append(name, website, description);
+            if (brand.logo_path) { const logo = document.createElement('img'); logo.src = `/brand-logos/${encodeURIComponent(brand.logo_path.split('/').pop())}`; logo.alt = `${brand.brand_name} approved reference logo`; logo.className = 'brand-logo-preview'; card.append(logo); }
+            const upload = document.createElement('form'); upload.className = 'brand-logo-form'; upload.dataset.brandId = brand.id;
+            const field = document.createElement('input'); field.type = 'file'; field.name = 'logo'; field.accept = 'image/png,image/jpeg,image/webp'; field.className = 'form-control'; field.required = true;
+            const button = document.createElement('button'); button.type = 'submit'; button.className = 'btn btn-outline-primary mt-2'; button.textContent = brand.logo_path ? 'Replace approved logo' : 'Add approved logo';
+            upload.append(field, button); card.append(upload); container.append(card);
+        });
+    } catch {
+        container.textContent = 'Unable to load the brand. Check the API response in your Flask app.';
+    }
+}
+
+document.getElementById('brandForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const message = document.getElementById('brandMessage');
+    message.textContent = 'Saving…';
+
+    const payload = {
+        brand_name: document.getElementById('brandName').value.trim(),
+        official_website: document.getElementById('brandWebsite').value.trim(),
+        description: document.getElementById('brandDescription').value.trim()
+    };
+
+    try {
+        const response = await fetch('/api/brands', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not save brand');
+
+        message.className = 'mt-3 text-success';
+        message.textContent = 'Brand saved successfully.';
+        event.target.reset();
+        await loadCurrentBrand();
+    } catch (error) {
+        message.className = 'mt-3 text-danger';
+        message.textContent = error.message;
+    }
+});
+
+document.getElementById('currentBrand').addEventListener('submit', async event => {
+    const form = event.target.closest('.brand-logo-form'); if (!form) return;
+    event.preventDefault(); const button = form.querySelector('button'); button.disabled = true; button.textContent = 'Uploading…';
+    try {
+        const response = await fetch(`/api/brands/${form.dataset.brandId}/logo`, {method:'POST', body:new FormData(form)});
+        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Logo upload failed');
+        await loadCurrentBrand();
+    } catch(error) { alert(error.message); button.disabled = false; button.textContent = 'Retry logo upload'; }
+});
+
+loadCurrentBrand();
+</script>
+{% endblock %}

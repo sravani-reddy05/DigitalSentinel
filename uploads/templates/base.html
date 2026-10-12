@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101828">
+    <title>{% block title %}DigitalSentinel{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('project_static', filename='static/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('project_static', filename='static/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('project_static', filename='static/responsive.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{{ 'home-page' if request.path == '/' else '' }}">
+<div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+        <a class="brand-logo" href="{{ url_for('dashboard.index') if false else '/' }}">
+            <span class="brand-icon"><i class="bi bi-shield-check"></i></span>
+            <span>
+                <strong>DigitalSentinel</strong>
+                <small>Digital Risk Protection</small>
+            </span>
+        </a>
+
+        <div class="sidebar-label">WORKSPACE</div>
+        <nav class="sidebar-nav">
+            <a href="/"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+            <a href="/brands"><i class="bi bi-patch-check"></i> Brand Profile</a>
+            <a href="/social-monitor"><i class="bi bi-people"></i> Social Monitoring</a>
+            <a href="/app-monitor"><i class="bi bi-phone"></i> App Monitoring</a>
+            <a href="/detections"><i class="bi bi-radar"></i> Detections</a>
+            <a href="/reports"><i class="bi bi-bar-chart"></i> Reports</a>
+        </nav>
+
+        <div class="sidebar-label">TOOLS</div>
+        <nav class="sidebar-nav">
+            <a href="/assistant"><i class="bi bi-stars"></i> AI Assistant</a>
+            <a href="/architecture"><i class="bi bi-diagram-3"></i> Architecture</a>
+            <a href="/settings"><i class="bi bi-gear"></i> Settings</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            <span><strong>DigitalSentinel</strong><small>Risk monitoring workspace</small></span>
+        </div>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <button class="btn btn-light d-lg-none" id="menuToggle"
+                    aria-label="Toggle navigation">
+                <i class="bi bi-list"></i>
+            </button>
+            <div>
+                <span class="topbar-title">{% block page_heading %}Security Overview{% endblock %}</span>
+                <div class="topbar-subtitle" data-i18n="Detect Digital Threats. Protect Brand Trust.">Detect Digital Threats. Protect Brand Trust.</div>
+            </div>
+            <div class="topbar-right">
+                <label class="visually-hidden" for="languageSelect">Language</label>
+                <select id="languageSelect" class="form-select form-select-sm language-select" aria-label="Choose language">
+                    <option value="en" {{ 'selected' if current_language == 'en' else '' }}>English</option>
+                    <option value="hi" {{ 'selected' if current_language == 'hi' else '' }}>Hindi</option>
+                    <option value="es" {{ 'selected' if current_language == 'es' else '' }}>Spanish</option>
+                    <option value="fr" {{ 'selected' if current_language == 'fr' else '' }}>French</option>
+                    <option value="de" {{ 'selected' if current_language == 'de' else '' }}>German</option>
+                    <option value="te" {{ 'selected' if current_language == 'te' else '' }}>Telugu</option>
+                </select>
+                <span class="demo-pill"><span class="status-dot"></span> DigitalSentinel</span>
+                <div class="avatar">DS</div>
+            </div>
+        </header>
+
+<main class="page-content {{ 'home-content' if request.path == '/' else '' }}">
+            <div id="globalAlert" class="alert d-none" role="alert"></div>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="page-footer">
+            <span>© 2026 DigitalSentinel</span>
+            <span data-i18n="Risk scores are indicators for review, not proof of malicious activity.">Risk scores are indicators for review, not proof of malicious activity.</span>
+        </footer>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('project_static', filename='static/app.js') }}"></script>
+<script src="{{ url_for('project_static', filename='static/i18n.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

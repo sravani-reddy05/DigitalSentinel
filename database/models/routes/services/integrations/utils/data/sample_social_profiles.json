@@ -1,0 +1,58 @@
+
+[
+  {
+    "id": "SOC-001",
+    "username": "adidas",
+    "platform": "Instagram",
+    "profile_url": "https://www.instagram.com/adidas/",
+    "display_name": "Adidas",
+    "description": "Official brand profile sample",
+    "is_sample": true,
+    "is_approved_official": true,
+    "expected_demo_result": "Approved sample"
+  },
+  {
+    "id": "SOC-002",
+    "username": "adidas_offers_50",
+    "platform": "Instagram",
+    "profile_url": "https://example.com/demo/adidas_offers_50",
+    "display_name": "Adidas Special Offers",
+    "description": "Fictional demo profile advertising free gifts and limited offers",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "Review recommended"
+  },
+  {
+    "id": "SOC-003",
+    "username": "adidassupport_help",
+    "platform": "Facebook",
+    "profile_url": "https://example.com/demo/adidassupport_help",
+    "display_name": "Adidas Support Help",
+    "description": "Fictional demo profile requesting users to verify account details",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "Review recommended"
+  },
+  {
+    "id": "SOC-004",
+    "username": "sports_fan_page",
+    "platform": "Instagram",
+    "profile_url": "https://example.com/demo/sports_fan_page",
+    "display_name": "Sports Fan Page",
+    "description": "Fictional fan account for sports discussions",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "Compare indicators before deciding"
+  },
+  {
+    "id": "SOC-005",
+    "username": "adidas_free_giveaway",
+    "platform": "TikTok",
+    "profile_url": "https://example.com/demo/adidas_free_giveaway",
+    "display_name": "Adidas Free Giveaway",
+    "description": "Fictional example mentioning a prize claim and a request for an OTP",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "High-priority review recommended"
+  }
+]

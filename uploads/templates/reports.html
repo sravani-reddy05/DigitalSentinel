@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Reports | DigitalSentinel{% endblock %}
+{% block page_heading %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <span class="eyebrow">INSIGHTS & EXPORTS</span>
+    <h1>Reports</h1>
+    <p>Review recorded detections and export the available data for further analysis.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon blue"><i class="bi bi-database"></i></div>
+            <span>Total recorded detections</span>
+            <h2 id="reportTotal">—</h2>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon orange"><i class="bi bi-clipboard-check"></i></div>
+            <span>Pending review</span>
+            <h2 id="reportPending">—</h2>
+        </div>
+    </div>
+</div>
+
+<section class="content-card mb-4">
+    <div class="section-heading">
+        <div><h3>Export report</h3><p>Download saved detection records as CSV.</p></div>
+        <i class="bi bi-file-earmark-spreadsheet fs-2 text-primary"></i>
+    </div>
+    <a class="btn btn-primary" href="/reports/export.csv">
+        <i class="bi bi-download"></i> Download CSV
+    </a>
+</section>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <section class="content-card h-100">
+            <h3>Detections by platform</h3>
+            <div id="platformSummary" class="summary-list">
+                <p class="text-muted">Loading report…</p>
+            </div>
+        </section>
+    </div>
+    <div class="col-12 col-lg-6">
+        <section class="content-card h-100">
+            <h3>Detections by risk level</h3>
+            <div id="riskSummary" class="summary-list">
+                <p class="text-muted">Loading report…</p>
+            </div>
+            <h3 class="mt-4">Review status</h3><div id="statusSummary" class="summary-list"></div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function renderSummary(container, entries, labelKey) {
+    container.replaceChildren();
+    if (!entries || !entries.length) {
+        container.textContent = 'No summary data available yet.';
+        return;
+    }
+
+    entries.forEach(entry => {
+        const row = document.createElement('div');
+        row.className = 'summary-row';
+        const label = document.createElement('span');
+        label.textContent = entry[labelKey] || entry.name || 'Unknown';
+        const count = document.createElement('strong');
+        count.textContent = entry.count ?? entry.total ?? 0;
+        row.append(label, count);
+        container.appendChild(row);
+    });
+}
+
+async function loadReports() {
+    try {
+        const response = await fetch('/api/reports/summary');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load reports');
+
+        document.getElementById('reportTotal').textContent =
+            data.total_detections ?? data.total ?? '—';
+        document.getElementById('reportPending').textContent =
+            data.needs_review ?? data.pending ?? '—';
+
+        renderSummary(
+            document.getElementById('platformSummary'),
+            data.by_platform || data.platforms || [],
+            'platform'
+        );
+        renderSummary(
+            document.getElementById('riskSummary'),
+            data.by_risk || data.risk_levels || [],
+            'risk_level'
+        );
+        renderSummary(document.getElementById('statusSummary'), data.by_status || [], 'status');
+    } catch {
+        document.getElementById('platformSummary').textContent =
+            'Could not load platform summary. Check the report API response.';
+        document.getElementById('riskSummary').textContent =
+            'Could not load risk summary. Check the report API response.';
+    }
+}
+loadReports();
+</script>
+{% endblock %}

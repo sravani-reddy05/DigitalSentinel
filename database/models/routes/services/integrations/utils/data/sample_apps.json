@@ -1,0 +1,58 @@
+
+[
+  {
+    "id": "APP-001",
+    "app_name": "Adidas Official",
+    "platform": "Google Play",
+    "publisher": "Approved Publisher Sample",
+    "app_url": "https://example.com/demo/adidas-official-app",
+    "description": "Illustrative approved app listing for the demonstration",
+    "is_sample": true,
+    "is_approved_official": true,
+    "expected_demo_result": "Approved sample"
+  },
+  {
+    "id": "APP-002",
+    "app_name": "Adidas Sports Deals",
+    "platform": "Google Play",
+    "publisher": "Unknown Demo Publisher",
+    "app_url": "https://example.com/demo/adidas-sports-deals",
+    "description": "Fictional app listing promoting special offers and free gifts",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "Review recommended"
+  },
+  {
+    "id": "APP-003",
+    "app_name": "Adidas Rewards Center",
+    "platform": "Apple App Store",
+    "publisher": "Sample Rewards Publisher",
+    "app_url": "https://example.com/demo/adidas-rewards-center",
+    "description": "Fictional listing that asks users to claim a reward",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "Review recommended"
+  },
+  {
+    "id": "APP-004",
+    "app_name": "Sports Training Guide",
+    "platform": "Google Play",
+    "publisher": "Independent Demo Publisher",
+    "app_url": "https://example.com/demo/sports-training-guide",
+    "description": "Fictional sports training guide with no claimed brand affiliation",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "Compare indicators before deciding"
+  },
+  {
+    "id": "APP-005",
+    "app_name": "Adidas Free Rewards",
+    "platform": "Google Play",
+    "publisher": "Unverified Demo Publisher",
+    "app_url": "https://example.com/demo/adidas-free-rewards",
+    "description": "Fictional listing containing a request for account verification and an OTP",
+    "is_sample": true,
+    "is_approved_official": false,
+    "expected_demo_result": "High-priority review recommended"
+  }
+]

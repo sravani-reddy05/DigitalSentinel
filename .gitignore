@@ -1,0 +1,50 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Test cache
+.pytest_cache/
+.coverage
+
+# IDE settings
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local database
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded files
+# Keep project templates, static assets and the demo test fixtures.
+uploads/*
+!uploads/.gitkeep
+!uploads/templates/
+!uploads/templates/**
+uploads/templates/images/**
+!uploads/templates/images/tests/
+!uploads/templates/images/tests/**
+!uploads/templates/images/logo.svg
+!uploads/templates/images/empty_state.svg
+
+# Temporary files
+*.tmp

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Social Monitoring | DigitalSentinel{% endblock %}
+{% block page_heading %}Social Monitoring{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <span class="eyebrow">SOCIAL PROFILE ANALYSIS</span>
+    <h1>Social Monitoring</h1>
+    <p>Review possible brand impersonation indicators in a manually entered profile.</p>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    Profile details are entered manually. When a profile URL is supplied, configured VirusTotal and Google Safe Browsing keys check its public URL reputation. This does not fetch profile content.
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-7">
+        <section class="content-card">
+            <h3>Analyze a social profile</h3>
+            <form id="socialScanForm">
+                <p class="small text-muted">Comparison brand: <strong id="selectedBrandName">{{ brands|selectattr('id', 'equalto', selected_brand_id)|map(attribute='brand_name')|first if selected_brand_id else (brands[0].brand_name if brands else 'Select a brand') }}</strong></p>
+                <label class="form-label" for="socialUsername">Username *</label>
+                <input class="form-control mb-3" id="socialUsername" maxlength="100"
+                       placeholder="e.g. brand_offers_50" required>
+
+                <label class="form-label" for="socialPlatform">Platform *</label>
+                <select class="form-select mb-3" id="socialPlatform" required>
+                    <option>Instagram</option>
+                    <option>Facebook</option>
+                    <option>X</option>
+                    <option>TikTok</option>
+                    <option>Other</option>
+                </select>
+
+                <label class="form-label" for="socialBrand">Company profile *</label>
+                <select class="form-select mb-3" id="socialBrand" required>
+                    {% for brand in brands %}<option value="{{ brand.id }}" {% if selected_brand_id == brand.id %}selected{% endif %}>{{ brand.brand_name }}</option>{% endfor %}
+                </select>
+
+                <label class="form-label" for="socialUrl">Profile URL</label>
+                <input class="form-control mb-3" id="socialUrl" type="url"
+                       placeholder="https://example.com/profile">
+
+                <label class="form-label" for="profileImage">Profile image (optional)</label>
+                <input class="form-control mb-3" id="profileImage" name="profile_image" type="file" accept="image/png,image/jpeg,image/webp">
+                <small class="form-text text-muted">Compared with the saved brand logo. This is a basic visual signal, not identity verification.</small>
+
+                <label class="form-label" for="socialDescription">Profile description</label>
+                <textarea class="form-control mb-3" id="socialDescription" rows="4"
+                          maxlength="2000"
+                          placeholder="Paste the public profile description for review…"></textarea>
+
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search"></i> Analyze Profile
+                </button>
+            </form>
+            <div id="socialMessage" class="mt-3" aria-live="polite"></div>
+        </section>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <section class="content-card">
+            <h3>What is checked?</h3>
+            <ul class="feature-list">
+                <li><i class="bi bi-check-circle"></i> Username similarity to the selected brand</li>
+                <li><i class="bi bi-check-circle"></i> Potentially promotional or risky phrases</li>
+                <li><i class="bi bi-check-circle"></i> An explainable heuristic risk score</li>
+                <li><i class="bi bi-check-circle"></i> URL reputation from configured providers (when a URL is supplied)</li>
+                <li><i class="bi bi-check-circle"></i> A saved record for manual review</li>
+            </ul>
+            <p class="small text-muted">A high score is a review signal, not proof of fraud.</p>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('socialScanForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const message = document.getElementById('socialMessage');
+    message.textContent = window.dsTranslate ? window.dsTranslate('Analyzing profile…') : 'Analyzing profile…';
+
+    const payload = new FormData();
+    payload.append('username', document.getElementById('socialUsername').value.trim());
+    payload.append('brand_id', document.getElementById('socialBrand').value);
+    payload.append('platform', document.getElementById('socialPlatform').value);
+    payload.append('profile_url', document.getElementById('socialUrl').value.trim());
+    payload.append('description', document.getElementById('socialDescription').value.trim());
+    if (document.getElementById('profileImage').files[0]) payload.append('profile_image', document.getElementById('profileImage').files[0]);
+
+    try {
+        const response = await fetch('/api/social/scan', {
+            method: 'POST',
+            body: payload
+        });
+        const result = await readScanResponse(response);
+        if (!response.ok) throw new Error(result.error || `Scan failed (HTTP ${response.status}). Check the Flask terminal for details.`);
+        if (!result.risk || !Number.isFinite(Number(result.risk.risk_score))) throw new Error('Analysis response did not include a risk score. Please try again.');
+
+        message.className = 'mt-3 alert alert-success';
+        message.replaceChildren();
+
+        const level = result.risk.risk_level;
+        const heading = document.createElement('div');
+        heading.className = `scan-risk-level risk-${level.toLowerCase()}`;
+        heading.textContent = `${window.dsTranslate ? window.dsTranslate('Risk') : 'Risk'}: ${window.dsTranslate ? window.dsTranslate(level) : level}`;
+        const detail = document.createElement('p');
+        detail.textContent = `Compared with ${result.brand_name || 'selected brand'} · Score: ${result.risk.risk_score}/100. ${result.notice || ''}`;
+        const basis = document.createElement('p'); basis.className = 'small text-muted';
+        basis.textContent = 'Risk score is a heuristic review signal, not a probability. Low: 0–34, Medium: 35–59, High: 60–100.';
+        const reasons = document.createElement('ul'); reasons.className = 'scan-reasons';
+        (result.risk.reasons || []).forEach(reason => { const item = document.createElement('li'); item.textContent = reason; reasons.append(item); });
+        if (result.url_reputation) {
+            const providerResults = document.createElement('p');
+            providerResults.className = 'small';
+            providerResults.textContent = result.url_reputation.providers?.length ? `${result.url_reputation.providers.map(provider => `${provider.provider}: ${provider.status}${provider.malicious != null ? ` (${provider.malicious} malicious, ${provider.suspicious} suspicious)` : provider.threats_found != null ? ` (${provider.threats_found} threat matches)` : ''}`).join(' · ')}. ${result.url_reputation.message || ''}` : result.url_reputation.message;
+            message.append(providerResults);
+        } else { const providerResults = document.createElement('p'); providerResults.className = 'small text-muted'; providerResults.textContent = 'No profile URL supplied; URL reputation was not checked.'; message.append(providerResults); }
+        const link = document.createElement('a');
+        link.href = `/detection/${encodeURIComponent(result.detection_id)}`;
+        link.className = 'btn btn-sm btn-outline-success';
+        link.textContent = window.dsTranslate ? window.dsTranslate('Review this finding') : 'Review this finding';
+        message.append(heading, detail, basis, reasons, link);
+    } catch (error) {
+        message.className = 'mt-3 alert alert-danger';
+        message.textContent = error.message;
+    }
+});
+
+document.getElementById('socialBrand').addEventListener('change', event => {
+    const selected = event.target.selectedOptions[0];
+    document.getElementById('selectedBrandName').textContent = selected ? selected.textContent : 'Select a brand';
+});
+
+async function readScanResponse(response) {
+    const body = await response.text();
+    try { return body ? JSON.parse(body) : {}; }
+    catch {
+        throw new Error(response.ok
+            ? 'The server returned an unreadable result. Restart the app and try again.'
+            : `The scan could not be completed (HTTP ${response.status}). Check that Flask is running, then try again.`);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | DigitalSentinel{% endblock %}
+{% block page_heading %}Security Dashboard{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+    <div>
+        <span class="eyebrow">YOUR SECURITY OVERVIEW</span>
+        <h1>Good day, Security Team</h1>
+        <p>Monitor possible impersonation indicators and review risks in one place.</p>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+        <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+        <div class="hero-core"><i class="bi bi-shield-lock-fill"></i><span class="core-pulse"></span></div>
+        <span class="hero-signal signal-one"><i class="bi bi-globe2"></i></span>
+        <span class="hero-signal signal-two"><i class="bi bi-at"></i></span>
+        <span class="hero-signal signal-three"><i class="bi bi-phone"></i></span>
+        <span class="hero-spark spark-one"></span><span class="hero-spark spark-two"></span><span class="hero-spark spark-three"></span>
+    </div>
+    <a href="/social-monitor" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Scan
+    </a>
+</section>
+
+<section class="content-card mb-4">
+    <div class="section-heading"><div><h3>Demo companies</h3><p>Choose a fictional company, then open a focused social or app review screen.</p></div><span class="demo-pill">Sample data</span></div>
+    <div class="row g-3">
+        {% for brand in brands %}
+        <div class="col-12 col-md-6 col-xl-4"><article class="company-card">
+            <span class="metric-icon purple"><i class="bi bi-buildings"></i></span>
+            <h4>{{ brand.brand_name }}</h4><p>{{ brand.description }}</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-sm btn-primary" href="{{ url_for('social.social_page', brand_id=brand.id) }}"><i class="bi bi-people"></i> Social scan</a>
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('app_store.app_monitor_page', brand_id=brand.id) }}"><i class="bi bi-phone"></i> App scan</a>
+            </div>
+        </article></div>
+        {% else %}<div class="col-12"><p class="text-muted mb-0">Run <code>python -m database.seed_data</code> to add five fictional companies.</p></div>{% endfor %}
+    </div>
+</section>
+
+<div class="alert alert-info" data-i18n="URL checks use configured threat reputation providers. Social profiles and app listings are analyzed from details you submit; the site does not scrape those platforms.">
+    <i class="bi bi-info-circle"></i>
+    URL checks use configured threat reputation providers. Social profiles and app listings are analyzed from details you submit; the site does not scrape those platforms.
+</div>
+
+<div class="row g-3 metric-grid">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <a class="metric-card metric-card-link" href="/detections">
+            <div class="metric-icon blue"><i class="bi bi-radar"></i></div>
+            <span>Total detections</span>
+            <h2 id="totalDetections">—</h2>
+            <small>Records in the database</small>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <a class="metric-card metric-card-link" href="/detections?risk=High">
+            <div class="metric-icon red"><i class="bi bi-shield-exclamation"></i></div>
+            <span>High risk</span>
+            <h2 id="highDetections">—</h2>
+            <small>Scores of 60–100</small>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <a class="metric-card metric-card-link" href="/detections?status=Needs%20Review">
+            <div class="metric-icon orange"><i class="bi bi-hourglass-split"></i></div>
+            <span>Needs review</span>
+            <h2 id="reviewDetections">—</h2>
+            <small>Awaiting a review decision</small>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <a class="metric-card metric-card-link" href="/settings">
+            <div class="metric-icon green"><i class="bi bi-check-circle"></i></div>
+            <span>Sources</span>
+            <h2>Manual</h2>
+            <small>Manual entry and sample data</small>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-12 col-xl-8">
+        <section class="content-card h-100">
+            <div class="section-heading">
+                <div>
+                    <h3>Recent detections</h3>
+                    <p>Latest records requiring attention</p>
+                </div>
+                <a href="/detections" class="text-link">View all <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                    <tr><th>Target</th><th>Platform</th><th>Risk</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody id="recentDetections">
+                    <tr><td colspan="5" class="text-center text-muted">Loading records…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <section class="content-card h-100">
+            <div class="section-heading">
+                <div><h3>Quick actions</h3><p>Start a review workflow</p></div>
+            </div>
+            <div class="quick-actions">
+                <a href="/social-monitor"><i class="bi bi-people"></i><span><strong>Analyze a social profile</strong><small>Review a username and description</small></span><i class="bi bi-chevron-right"></i></a>
+                <a href="/app-monitor"><i class="bi bi-phone"></i><span><strong>Analyze an app listing</strong><small>Check name and publisher indicators</small></span><i class="bi bi-chevron-right"></i></a>
+                <a href="/reports"><i class="bi bi-file-earmark-bar-graph"></i><span><strong>View reports</strong><small>Summaries and CSV export</small></span><i class="bi bi-chevron-right"></i></a>
+                <a href="/assistant"><i class="bi bi-stars"></i><span><strong>Ask the assistant</strong><small>Understand risk indicators</small></span><i class="bi bi-chevron-right"></i></a>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadDashboard() {
+    try {
+        const [statsResponse, recentResponse] = await Promise.all([
+            fetch('/api/dashboard/stats'),
+            fetch('/api/dashboard/recent')
+        ]);
+        if (!statsResponse.ok || !recentResponse.ok) throw new Error('API request failed');
+
+        const stats = await statsResponse.json();
+        const recent = await recentResponse.json();
+
+        document.getElementById('totalDetections').textContent =
+            stats.total_detections ?? stats.total ?? 0;
+        document.getElementById('highDetections').textContent =
+            stats.high_risk ?? 0;
+        document.getElementById('reviewDetections').textContent =
+            stats.needs_review ?? stats.review ?? 0;
+
+        const rows = Array.isArray(recent) ? recent : (recent.detections || []);
+        const tbody = document.getElementById('recentDetections');
+
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No detections yet. Start a scan to create a record.</td></tr>';
+            return;
+        }
+
+        tbody.replaceChildren();
+        rows.forEach(item => {
+            const tr = document.createElement('tr');
+            const target = document.createElement('td');
+            const platform = document.createElement('td');
+            const risk = document.createElement('td');
+            const status = document.createElement('td');
+            const action = document.createElement('td');
+
+            target.textContent = item.target_name || 'Unknown';
+            platform.textContent = item.platform || '—';
+            risk.textContent = `${item.risk_level || 'Unknown'} (${item.risk_score ?? 0})`;
+            status.textContent = item.status || 'Needs Review';
+
+            const link = document.createElement('a');
+            link.href = `/detection/${encodeURIComponent(item.id)}`;
+            link.className = 'btn btn-sm btn-light';
+            link.textContent = window.dsTranslate ? window.dsTranslate('View') : 'View';
+            action.appendChild(link);
+
+            tr.append(target, platform, risk, status, action);
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        document.getElementById('recentDetections').innerHTML =
+            '<tr><td colspan="5" class="text-center text-danger">Could not load dashboard data. Check Flask terminal and API routes.</td></tr>';
+    }
+}
+loadDashboard();
+</script>
+{% endblock %}

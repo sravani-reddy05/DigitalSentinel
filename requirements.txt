@@ -1,0 +1,9 @@
+Flask
+Flask-WTF
+requests
+pytest
+python-dotenv
+rapidfuzz
+Pillow
+groq
+gunicorn

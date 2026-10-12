@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}AI Assistant | DigitalSentinel{% endblock %}
+{% block page_heading %}AI Security Assistant{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <span class="eyebrow">AI-POWERED EXPLANATIONS</span>
+    <h1>Security Assistant</h1>
+    <p>Ask questions about risk scores, review decisions and digital impersonation indicators.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-9">
+        <section class="content-card chat-card">
+            <div class="chat-header">
+                <div class="assistant-avatar"><i class="bi bi-stars"></i></div>
+                <div><h3>Sentinel Assistant</h3><p>Security education and risk explanations</p></div>
+                <label class="visually-hidden" for="voiceLanguage">Assistant language</label>
+                <select id="voiceLanguage" class="form-select form-select-sm ms-auto" style="max-width:155px">
+                    <option value="en-US">English</option><option value="hi-IN">Hindi</option><option value="es-ES">Spanish</option><option value="fr-FR">French</option><option value="de-DE">German</option><option value="te-IN">Telugu</option>
+                </select>
+            </div>
+
+            <div class="chat-messages" id="chatMessages" aria-live="polite">
+                <div class="chat-bubble assistant-bubble">
+                    Hello! I can explain risk indicators, review steps, and URL reputation results. Choose a language and ask by typing or voice.
+                </div>
+            </div>
+
+            <div class="suggested-prompts">
+                <button type="button" class="btn btn-sm btn-outline-secondary prompt-btn">
+                    Explain a high risk score
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary prompt-btn">
+                    What is brand impersonation?
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary prompt-btn">
+                    How should I review a detection?
+                </button>
+            </div>
+
+            <form id="chatForm" class="chat-input-area">
+                <textarea id="chatInput" class="form-control" rows="2" maxlength="2000"
+                          placeholder="Ask a security question…" required></textarea>
+                <button type="button" class="btn btn-outline-secondary" id="voiceButton" aria-label="Speak a question"><i class="bi bi-mic"></i></button>
+                <button type="submit" class="btn btn-primary" id="sendButton">
+                    <i class="bi bi-send"></i> Send
+                </button>
+            </form>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="speakReplyButton"><i class="bi bi-volume-up"></i> Read latest reply aloud</button>
+            <p class="small text-muted mt-2">
+                Do not enter passwords, private tokens or confidential information.
+                AI responses may be inaccurate; verify important conclusions.
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+
+function addChatBubble(text, type) {
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${type === 'user' ? 'user-bubble' : 'assistant-bubble'}`;
+    bubble.textContent = text;
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return bubble;
+}
+
+document.querySelectorAll('.prompt-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        chatInput.value = button.textContent.trim();
+        chatInput.focus();
+    });
+});
+
+document.getElementById('chatForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    addChatBubble(message, 'user');
+    chatInput.value = '';
+    const waiting = addChatBubble('Thinking…', 'assistant');
+    const sendButton = document.getElementById('sendButton');
+    sendButton.disabled = true;
+
+    try {
+        const response = await fetch('/api/assistant/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message, language: document.getElementById('voiceLanguage').value.split('-')[0]})
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Assistant request failed');
+
+        waiting.textContent = result.reply || result.response || result.answer ||
+            result.message || 'No response was returned.';
+    } catch (error) {
+        waiting.textContent = `Unable to get a response: ${error.message}`;
+    } finally {
+        sendButton.disabled = false;
+        chatInput.focus();
+    }
+});
+</script>
+<script src="{{ url_for('project_static', filename='static/voice_assistant.js') }}"></script>
+{% endblock %}
