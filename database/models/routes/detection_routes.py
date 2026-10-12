@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, render_template
 from database.models.detection_model import (
     get_all_detections,
     get_detection_by_id,
+    delete_detection,
     update_detection_status
 )
 
@@ -60,6 +61,23 @@ def detection_details(detection_id):
         return jsonify({"error": "Detection not found"}), 404
 
     return jsonify({"detection": detection})
+
+
+@detection_bp.route(
+    "/api/detections/<int:detection_id>",
+    methods=["DELETE"]
+)
+def remove_detection(detection_id):
+    if not get_detection_by_id(detection_id):
+        return jsonify({"error": "Detection not found"}), 404
+
+    if not delete_detection(detection_id):
+        return jsonify({"error": "Could not delete detection"}), 500
+
+    return jsonify({
+        "message": "Detection deleted",
+        "detection_id": detection_id
+    })
 
 
 @detection_bp.route(

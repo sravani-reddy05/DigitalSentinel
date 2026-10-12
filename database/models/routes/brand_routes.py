@@ -10,6 +10,7 @@ from database.models.brand_model import (
     get_all_brands,
     set_brand_logo,
 )
+from database.models.routes.services.brand_url_analyzer import analyze_brand_url
 
 brand_bp = Blueprint("brand", __name__)
 
@@ -100,6 +101,97 @@ def upload_brand_logo(brand_id):
         (folder / filename).unlink(missing_ok=True)
         return jsonify({"error": "Could not save logo for this brand"}), 500
     return jsonify({"message": "Brand logo saved", "logo_url": f"/brand-logos/{filename}"}), 201
+
+
+@brand_bp.route("/api/brands/analyze", methods=["POST"])
+def analyze_brand_candidate():
+    from config import Config
+    from database.models.routes.services.integrations.utils.validators import validate_http_url
+    from database.models.routes.services.logo_analyzer import compare_image_upload
+
+    data = request.form
+    brand_id = data.get("brand_id", type=int)
+    brand = get_brand(brand_id=brand_id) if brand_id else None
+    if not brand:
+        return jsonify({"error": "Choose a registered brand to analyze"}), 400
+
+    target_url = str(data.get("target_url", "")).strip()
+    candidate_image = request.files.get("candidate_logo")
+    has_candidate_image = bool(candidate_image and candidate_image.filename)
+    if not target_url and not has_candidate_image:
+        return jsonify({"error": "Enter a URL or upload a logo to analyze"}), 400
+
+    url_analysis = None
+    if target_url:
+        valid_url, message = validate_http_url(target_url, required=True)
+        if not valid_url:
+            return jsonify({"error": message}), 400
+        url_analysis = analyze_brand_url(
+            target_url,
+            brand["brand_name"],
+            brand.get("official_website", ""),
+        )
+
+    image_comparison = None
+    if has_candidate_image:
+        if Path(candidate_image.filename).suffix.lower() not in {
+            ".png", ".jpg", ".jpeg", ".webp"
+        }:
+            return jsonify({"error": "Logo must be PNG, JPG, JPEG, or WEBP"}), 400
+        try:
+            candidate_image.stream.seek(0)
+            with Image.open(candidate_image.stream) as opened:
+                opened.verify()
+            candidate_image.stream.seek(0)
+        except (UnidentifiedImageError, OSError, ValueError):
+            return jsonify({"error": "The selected file is not a valid image"}), 400
+
+        reference_path = (
+            Path(Config.UPLOAD_FOLDER) / brand["logo_path"]
+            if brand.get("logo_path")
+            else None
+        )
+        if reference_path and reference_path.is_file():
+            comparison = compare_image_upload(reference_path, candidate_image)
+            if comparison.get("error"):
+                return jsonify({"error": comparison["error"]}), 422
+            image_comparison = {
+                "status": "compared",
+                "similarity": comparison["similarity"],
+                "method": comparison["method"],
+                "notice": comparison["notice"],
+            }
+        else:
+            image_comparison = {
+                "status": "reference_logo_missing",
+                "similarity": None,
+                "notice": "Upload an approved brand logo before comparing candidate logos.",
+            }
+
+    logo_risk = bool(
+        image_comparison
+        and image_comparison.get("similarity") is not None
+        and image_comparison["similarity"] >= 70
+    )
+    has_risk = bool(
+        (url_analysis and url_analysis["has_risk"]) or logo_risk
+    )
+    analysis_complete = not (
+        image_comparison
+        and image_comparison["status"] == "reference_logo_missing"
+    )
+
+    return jsonify({
+        "brand_name": brand["brand_name"],
+        "has_risk": has_risk,
+        "analysis_complete": analysis_complete,
+        "url_analysis": url_analysis,
+        "image_comparison": image_comparison,
+        "logo_risk_threshold": 70,
+        "notice": (
+            "A visual match or URL pattern is a review signal, not proof of impersonation."
+        ),
+    })
 
 
 @brand_bp.route("/brand-logos/<filename>")

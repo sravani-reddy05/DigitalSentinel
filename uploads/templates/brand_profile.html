@@ -3,17 +3,19 @@
 {% block page_heading %}Brand Profile{% endblock %}
 
 {% block content %}
-<div class="page-intro">
+<div class="page-intro brand-page-intro">
     <span class="eyebrow">BRAND PROTECTION</span>
     <h1>Brand Profile</h1>
-    <p>Configure each brand's name, official website, and approved reference logo for analysis.</p>
+    <p>Manage your official brand assets and screen submitted URLs and logos for common impersonation signals.</p>
 </div>
 
-<div class="row g-4">
+<div class="row g-4 brand-workspace">
     <div class="col-12 col-lg-5">
-        <section class="content-card">
-            <h3>Register a brand</h3>
-            <p class="text-muted">Add the brand you want to evaluate. After saving, attach its approved logo on the brand card.</p>
+        <section class="content-card brand-register-card">
+            <div class="section-heading">
+                <div><h3>Register a brand</h3><p>Create the trusted reference used in checks</p></div>
+                <span class="brand-section-icon"><i class="bi bi-patch-check"></i></span>
+            </div>
             <form id="brandForm">
                 <label class="form-label" for="brandName">Brand name *</label>
                 <input class="form-control mb-3" id="brandName" maxlength="120" required
@@ -24,25 +26,64 @@
                        placeholder="https://www.example.com">
 
                 <label class="form-label" for="brandDescription">Description</label>
-                <textarea class="form-control mb-3" id="brandDescription" rows="4"
+                <textarea class="form-control mb-3" id="brandDescription" rows="3"
                           maxlength="1000" placeholder="Describe the brand…"></textarea>
 
-                <button class="btn btn-primary w-100" type="submit">
+                <button class="btn btn-brand-primary w-100" type="submit">
                     <i class="bi bi-plus-circle"></i> Save Brand
                 </button>
             </form>
             <div id="brandMessage" class="mt-3" aria-live="polite"></div>
         </section>
+
+        <section class="content-card brand-analyzer-card mt-4">
+            <div class="section-heading">
+                <div><h3>Screen a URL or logo</h3><p>Compare against an approved brand identity</p></div>
+                <span class="brand-section-icon"><i class="bi bi-search"></i></span>
+            </div>
+            <form id="brandAnalysisForm">
+                <label class="form-label" for="analysisBrand">Brand reference *</label>
+                <select class="form-select mb-3" id="analysisBrand" required>
+                    <option value="">Loading brands…</option>
+                </select>
+
+                <label class="form-label" for="candidateUrl">Submitted URL</label>
+                <input class="form-control mb-3" id="candidateUrl" name="target_url" type="url"
+                       placeholder="https://example.com/login">
+
+                <label class="form-label" for="candidateLogo">Submitted logo image</label>
+                <input class="form-control mb-2" id="candidateLogo" name="candidate_logo"
+                       type="file" accept="image/png,image/jpeg,image/webp">
+                <small class="brand-form-hint">Upload an approved logo in the brand card below to enable image comparison.</small>
+
+                <button class="btn btn-brand-primary w-100 mt-3" id="analyzeBrandButton" type="submit">
+                    <i class="bi bi-shield-search"></i> Analyze indicators
+                </button>
+            </form>
+            <div id="brandAnalysisMessage" class="mt-3" aria-live="polite"></div>
+        </section>
     </div>
 
     <div class="col-12 col-lg-7">
-        <section class="content-card">
+        <section class="content-card brand-results-card">
             <div class="section-heading">
-                <div><h3>Current brand</h3><p>Brand used by the analysis forms</p></div>
-                <i class="bi bi-patch-check text-primary fs-3"></i>
+                <div><h3>Analysis result</h3><p>URL patterns and logo similarity</p></div>
+                <i class="bi bi-shield-check text-primary fs-3"></i>
+            </div>
+            <div id="brandAnalysisResult" class="brand-analysis-placeholder" aria-live="polite">
+                <span class="brand-placeholder-icon"><i class="bi bi-shield-lock"></i></span>
+                <strong>Ready to check a brand</strong>
+                <p>Choose a brand and submit a URL, logo, or both. Results will appear here.</p>
+            </div>
+        </section>
+
+        <section class="content-card brand-assets-section mt-4">
+            <div class="section-heading">
+                <div><h3>Registered brands</h3><p>Approved logos are used as visual references</p></div>
+                <span class="brand-count" id="brandCount">0 brands</span>
             </div>
             <div id="currentBrand">
-                <p class="text-muted">Loading brand profile…</p>
+                <p class="text-muted">Loading brand profiles…</p>
             </div>
         </section>
     </div>
@@ -51,70 +92,237 @@
 
 {% block extra_js %}
 <script>
+const registeredBrands = new Map();
+
+function createElement(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text) element.textContent = text;
+    return element;
+}
+
+function logoUrl(brand) {
+    if (!brand.logo_path) return "";
+    return `/brand-logos/${encodeURIComponent(brand.logo_path.split("/").pop())}`;
+}
+
 async function loadCurrentBrand() {
-    const container = document.getElementById('currentBrand');
+    const container = document.getElementById("currentBrand");
+    const selector = document.getElementById("analysisBrand");
+    const count = document.getElementById("brandCount");
     try {
-        const response = await fetch('/api/brands');
-        if (!response.ok) throw new Error('Could not load brands');
+        const response = await fetch("/api/brands");
         const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Could not load brands.");
+
         const brands = payload.brands || [];
-        if (!brands.length) { container.textContent = 'No brand registered yet. Use the form to add one.'; return; }
+        registeredBrands.clear();
+        brands.forEach(brand => registeredBrands.set(String(brand.id), brand));
         container.replaceChildren();
+        selector.replaceChildren();
+
+        if (!brands.length) {
+            container.append(createElement("p", "text-muted", "No brand registered yet. Use the form to add one."));
+            selector.append(new Option("Register a brand first", ""));
+            selector.disabled = true;
+            count.textContent = "0 brands";
+            return;
+        }
+
+        selector.append(new Option("Choose a brand", ""));
         brands.forEach(brand => {
-            const card = document.createElement('div'); card.className = 'brand-list-item content-card mb-3';
-            const name = document.createElement('h2'); name.textContent = brand.brand_name || 'Unnamed brand';
-            const website = document.createElement('p'); website.textContent = `Website: ${brand.official_website || 'Not provided'}`;
-            const description = document.createElement('p'); description.textContent = brand.description || 'No description provided.';
-            card.append(name, website, description);
-            if (brand.logo_path) { const logo = document.createElement('img'); logo.src = `/brand-logos/${encodeURIComponent(brand.logo_path.split('/').pop())}`; logo.alt = `${brand.brand_name} approved reference logo`; logo.className = 'brand-logo-preview'; card.append(logo); }
-            const upload = document.createElement('form'); upload.className = 'brand-logo-form'; upload.dataset.brandId = brand.id;
-            const field = document.createElement('input'); field.type = 'file'; field.name = 'logo'; field.accept = 'image/png,image/jpeg,image/webp'; field.className = 'form-control'; field.required = true;
-            const button = document.createElement('button'); button.type = 'submit'; button.className = 'btn btn-outline-primary mt-2'; button.textContent = brand.logo_path ? 'Replace approved logo' : 'Add approved logo';
-            upload.append(field, button); card.append(upload); container.append(card);
+            selector.append(new Option(brand.brand_name || "Unnamed brand", brand.id));
+            const card = createElement("article", "brand-list-item");
+            const info = createElement("div", "brand-asset-copy");
+            info.append(
+                createElement("h4", "", brand.brand_name || "Unnamed brand"),
+                createElement("p", "brand-asset-website", `Official website: ${brand.official_website || "Not provided"}`),
+                createElement("p", "brand-asset-description", brand.description || "No description provided.")
+            );
+
+            const logo = createElement("div", "brand-logo-stage");
+            if (brand.logo_path) {
+                const image = createElement("img", "brand-logo-preview");
+                image.src = logoUrl(brand);
+                image.alt = `${brand.brand_name} approved reference logo`;
+                logo.append(image);
+            } else {
+                logo.append(createElement("span", "brand-logo-empty", "No approved logo"));
+            }
+
+            const upload = createElement("form", "brand-logo-form");
+            upload.dataset.brandId = brand.id;
+            const field = createElement("input", "form-control");
+            field.type = "file";
+            field.name = "logo";
+            field.accept = "image/png,image/jpeg,image/webp";
+            field.required = true;
+            field.setAttribute("aria-label", `Approved logo for ${brand.brand_name}`);
+            const button = createElement("button", "btn btn-brand-secondary mt-2",
+                brand.logo_path ? "Replace approved logo" : "Add approved logo");
+            button.type = "submit";
+            upload.append(field, button);
+            info.append(upload);
+            card.append(info, logo);
+            container.append(card);
         });
-    } catch {
-        container.textContent = 'Unable to load the brand. Check the API response in your Flask app.';
+        selector.disabled = false;
+        count.textContent = `${brands.length} ${brands.length === 1 ? "brand" : "brands"}`;
+    } catch (error) {
+        container.replaceChildren(createElement("p", "text-danger", error.message));
+        selector.replaceChildren(new Option("Brands could not be loaded", ""));
+        selector.disabled = true;
     }
 }
 
-document.getElementById('brandForm').addEventListener('submit', async event => {
+function renderAnalysisResult(result, brand, candidatePreviewUrl) {
+    const target = document.getElementById("brandAnalysisResult");
+    target.replaceChildren();
+    target.className = "brand-analysis-content";
+    const imageResult = result.image_comparison;
+    const complete = result.analysis_complete;
+    const state = result.has_risk ? "risk" : !complete ? "incomplete" : "safe";
+    const panel = createElement("div", `brand-verdict ${state}`);
+    const icon = createElement("span", "brand-verdict-icon");
+    icon.innerHTML = state === "risk"
+        ? '<i class="bi bi-exclamation-triangle-fill"></i>'
+        : state === "safe" ? '<i class="bi bi-shield-check"></i>' : '<i class="bi bi-info-circle"></i>';
+    const copy = createElement("div", "brand-verdict-copy");
+    copy.append(
+        createElement("strong", "", state === "risk" ? "Risk indicators found"
+            : state === "safe" ? "No risk indicators detected" : "Analysis incomplete"),
+        createElement("p", "", state === "risk"
+            ? "Review the signals below before taking action."
+            : state === "safe" ? "The submitted indicators did not match the patterns checked."
+            : "Add an approved reference logo to complete the image comparison.")
+    );
+    panel.append(icon, copy);
+    target.append(panel);
+
+    const indicators = [];
+    if (result.url_analysis) {
+        result.url_analysis.suspicious_patterns.forEach(reason => indicators.push(reason));
+        if (!result.url_analysis.suspicious_patterns.length) {
+            indicators.push(`No suspicious URL patterns found for ${result.url_analysis.hostname}.`);
+        }
+    }
+    if (imageResult) {
+        if (imageResult.status === "compared") {
+            indicators.push(`Logo similarity: ${imageResult.similarity}% (review threshold: ${result.logo_risk_threshold}%).`);
+        } else {
+            indicators.push(imageResult.notice);
+        }
+    }
+    const list = createElement("ul", "brand-indicator-list");
+    indicators.forEach(indicator => list.append(createElement("li", "", indicator)));
+    target.append(list);
+
+    if (imageResult && candidatePreviewUrl) {
+        const comparison = createElement("div", "brand-logo-comparison");
+        [
+            {label: "Submitted logo", src: candidatePreviewUrl},
+            {label: "Approved brand logo", src: logoUrl(brand)}
+        ].forEach(item => {
+            const itemBox = createElement("div", "brand-comparison-item");
+            itemBox.append(createElement("span", "", item.label));
+            if (item.src) {
+                const image = createElement("img", "", "");
+                image.src = item.src;
+                image.alt = item.label;
+                itemBox.append(image);
+            } else {
+                itemBox.append(createElement("div", "brand-comparison-empty", "Reference unavailable"));
+            }
+            comparison.append(itemBox);
+        });
+        target.append(comparison);
+    }
+    target.append(createElement("p", "brand-analysis-note", result.notice));
+}
+
+document.getElementById("brandForm").addEventListener("submit", async event => {
     event.preventDefault();
-    const message = document.getElementById('brandMessage');
-    message.textContent = 'Saving…';
-
-    const payload = {
-        brand_name: document.getElementById('brandName').value.trim(),
-        official_website: document.getElementById('brandWebsite').value.trim(),
-        description: document.getElementById('brandDescription').value.trim()
-    };
-
+    const message = document.getElementById("brandMessage");
+    message.textContent = "Saving brand…";
     try {
-        const response = await fetch('/api/brands', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
+        const response = await fetch("/api/brands", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                brand_name: document.getElementById("brandName").value.trim(),
+                official_website: document.getElementById("brandWebsite").value.trim(),
+                description: document.getElementById("brandDescription").value.trim()
+            })
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Could not save brand');
-
-        message.className = 'mt-3 text-success';
-        message.textContent = 'Brand saved successfully.';
+        if (!response.ok) throw new Error(result.error || "Unable to save brand.");
+        message.className = "mt-3 text-success";
+        message.textContent = "Brand saved successfully.";
         event.target.reset();
         await loadCurrentBrand();
     } catch (error) {
-        message.className = 'mt-3 text-danger';
+        message.className = "mt-3 text-danger";
         message.textContent = error.message;
     }
 });
 
-document.getElementById('currentBrand').addEventListener('submit', async event => {
-    const form = event.target.closest('.brand-logo-form'); if (!form) return;
-    event.preventDefault(); const button = form.querySelector('button'); button.disabled = true; button.textContent = 'Uploading…';
+document.getElementById("brandAnalysisForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const message = document.getElementById("brandAnalysisMessage");
+    const button = document.getElementById("analyzeBrandButton");
+    const form = event.currentTarget;
+    const brand = registeredBrands.get(document.getElementById("analysisBrand").value);
+    if (!brand) {
+        message.className = "mt-3 text-danger";
+        message.textContent = "Choose a registered brand.";
+        return;
+    }
+
+    const candidateFile = document.getElementById("candidateLogo").files[0];
+    const previewUrl = candidateFile ? URL.createObjectURL(candidateFile) : "";
+    const formData = new FormData(form);
+    formData.set("brand_id", brand.id);
+    button.disabled = true;
+    button.textContent = "Analyzing…";
+    message.textContent = "";
     try {
-        const response = await fetch(`/api/brands/${form.dataset.brandId}/logo`, {method:'POST', body:new FormData(form)});
-        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Logo upload failed');
+        const response = await fetch("/api/brands/analyze", {method: "POST", body: formData});
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Unable to analyze the submitted indicators.");
+        renderAnalysisResult(result, brand, previewUrl);
+        message.className = "mt-3 text-success";
+        message.textContent = "Analysis complete.";
+    } catch (error) {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        message.className = "mt-3 text-danger";
+        message.textContent = error.message;
+    } finally {
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-shield-search"></i> Analyze indicators';
+    }
+});
+
+document.getElementById("currentBrand").addEventListener("submit", async event => {
+    const form = event.target.closest(".brand-logo-form");
+    if (!form) return;
+    event.preventDefault();
+    const button = form.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Uploading…";
+    try {
+        const response = await fetch(`/api/brands/${form.dataset.brandId}/logo`, {
+            method: "POST",
+            body: new FormData(form)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Logo upload failed.");
         await loadCurrentBrand();
-    } catch(error) { alert(error.message); button.disabled = false; button.textContent = 'Retry logo upload'; }
+    } catch (error) {
+        button.disabled = false;
+        button.textContent = "Retry logo upload";
+        const status = createElement("p", "text-danger mt-2", error.message);
+        form.append(status);
+    }
 });
 
 loadCurrentBrand();

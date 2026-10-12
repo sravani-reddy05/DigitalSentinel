@@ -3,39 +3,39 @@
 {% block page_heading %}System Architecture{% endblock %}
 
 {% block content %}
-<div class="page-intro">
+<div class="page-intro architecture-page-intro">
     <span class="eyebrow">HOW THE PLATFORM WORKS</span>
     <h1>System Architecture</h1>
     <p>A modular architecture for brand risk monitoring, authorized URL reputation checks, and human review.</p>
 </div>
 
-<section class="content-card mb-4">
+<section class="content-card mb-4 architecture-flow-card">
     <div class="architecture-flow">
-        <div class="architecture-node">
+        <div class="architecture-node architecture-input-node">
             <i class="bi bi-input-cursor-text"></i>
             <strong>Input Layer</strong>
             <small>Manual profile and app details</small>
         </div>
         <div class="architecture-arrow"><i class="bi bi-arrow-down"></i></div>
-        <div class="architecture-node">
+        <div class="architecture-node architecture-validation-node">
             <i class="bi bi-funnel"></i>
             <strong>Validation Layer</strong>
             <small>Input validation and normalization</small>
         </div>
         <div class="architecture-arrow"><i class="bi bi-arrow-down"></i></div>
-        <div class="architecture-node">
+        <div class="architecture-node architecture-analysis-node">
             <i class="bi bi-cpu"></i>
             <strong>Analysis Engine</strong>
             <small>Name similarity and risk heuristics</small>
         </div>
         <div class="architecture-arrow"><i class="bi bi-arrow-down"></i></div>
-        <div class="architecture-node">
+        <div class="architecture-node architecture-storage-node">
             <i class="bi bi-database"></i>
             <strong>Storage Layer</strong>
             <small>SQLite records and review status</small>
         </div>
         <div class="architecture-arrow"><i class="bi bi-arrow-down"></i></div>
-        <div class="architecture-node">
+        <div class="architecture-node architecture-dashboard-node">
             <i class="bi bi-window"></i>
             <strong>Dashboard & Reports</strong>
             <small>Review, summarize and export</small>
@@ -45,7 +45,7 @@
 
 <div class="row g-4">
     <div class="col-12 col-md-6">
-        <section class="content-card h-100">
+        <section class="content-card h-100 architecture-info-card architecture-stack-card">
             <h3><i class="bi bi-code-slash text-primary"></i> Technology stack</h3>
             <ul class="feature-list">
                 <li>Python and Flask — backend and routing</li>
@@ -58,7 +58,7 @@
         </section>
     </div>
     <div class="col-12 col-md-6">
-        <section class="content-card h-100">
+        <section class="content-card h-100 architecture-info-card architecture-limits-card">
             <h3><i class="bi bi-shield-lock text-primary"></i> Current limitations</h3>
             <ul class="feature-list">
                 <li>External platform monitoring is not active.</li>

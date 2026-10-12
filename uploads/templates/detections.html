@@ -3,13 +3,13 @@
 {% block page_heading %}Detection Center{% endblock %}
 
 {% block content %}
-<div class="page-intro">
+<div class="page-intro detections-page-intro">
     <span class="eyebrow">THREAT REVIEW WORKSPACE</span>
     <h1>Detection Center</h1>
     <p>Review indicators, inspect reasons and update the investigation status.</p>
 </div>
 
-<section class="content-card">
+<section class="content-card detections-list-card">
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-4">
             <label class="form-label" for="filterPlatform">Platform</label>
@@ -35,15 +35,15 @@
             </select>
         </div>
         <div class="col-12 col-md-4 d-flex align-items-end">
-            <button id="applyFilters" class="btn btn-primary me-2">Apply filters</button>
-            <button id="clearFilters" class="btn btn-outline-secondary">Clear</button>
+            <button id="applyFilters" class="btn btn-detection-primary me-2">Apply filters</button>
+            <button id="clearFilters" class="btn btn-detection-secondary">Clear</button>
         </div>
     </div>
 
     <div class="table-responsive">
         <table class="table align-middle">
             <thead>
-            <tr><th>Target</th><th>Platform</th><th>Score</th><th>Risk</th><th>Status</th><th>Created</th><th></th></tr>
+            <tr><th>Target</th><th>Platform</th><th>Score</th><th>Risk</th><th>Status</th><th>Created</th><th>Actions</th></tr>
             </thead>
             <tbody id="detectionsBody">
             <tr><td colspan="7" class="text-center text-muted">Loading detections…</td></tr>
@@ -92,27 +92,58 @@ async function loadDetections() {
 
         items.forEach(item => {
             const row = document.createElement('tr');
-            const values = [
-                item.target_name || 'Unknown',
-                item.platform || '—',
-                `${item.risk_score ?? 0}/100`,
-                item.risk_level || 'Unknown',
-                item.status || 'Needs Review',
-                item.created_at || '—'
-            ];
+            const riskLevel = String(item.risk_level || 'Unknown').toLowerCase();
+            const riskClass = ['critical', 'high'].includes(riskLevel) ? 'high'
+                : riskLevel === 'medium' ? 'medium' : 'low';
+            row.className = `detection-row detection-row-${riskClass}`;
 
-            values.forEach(value => {
-                const cell = document.createElement('td');
-                cell.textContent = value;
-                row.appendChild(cell);
-            });
+            const targetCell = document.createElement('td');
+            targetCell.className = 'detection-target-cell';
+            targetCell.textContent = item.target_name || 'Unknown';
+            row.appendChild(targetCell);
+            const platformCell = document.createElement('td');
+            platformCell.textContent = item.platform || '—';
+            row.appendChild(platformCell);
+            const scoreCell = document.createElement('td');
+            const score = Number(item.risk_score ?? 0);
+            const scoreBadge = document.createElement('span');
+            scoreBadge.className = `detection-score detection-score-${riskClass}`;
+            scoreBadge.textContent = `${score}/100`;
+            scoreCell.appendChild(scoreBadge);
+            row.appendChild(scoreCell);
+            const riskCell = document.createElement('td');
+            const riskBadge = document.createElement('span');
+            riskBadge.className = `detection-risk-badge ${riskClass}`;
+            riskBadge.textContent = item.risk_level || 'Unknown';
+            riskCell.appendChild(riskBadge);
+            row.appendChild(riskCell);
+            const statusCell = document.createElement('td');
+            const statusBadge = document.createElement('span');
+            statusBadge.className = 'detection-status-badge';
+            statusBadge.textContent = item.status || 'Needs Review';
+            statusCell.appendChild(statusBadge);
+            row.appendChild(statusCell);
+            const createdCell = document.createElement('td');
+            createdCell.className = 'detection-date-cell';
+            createdCell.textContent = item.created_at || '—';
+            row.appendChild(createdCell);
 
             const actionCell = document.createElement('td');
+            actionCell.className = 'detection-actions-cell';
+            const actions = document.createElement('div');
+            actions.className = 'detection-actions';
             const link = document.createElement('a');
             link.href = `/detection/${encodeURIComponent(item.id)}`;
-            link.className = 'btn btn-sm btn-outline-primary';
+            link.className = 'btn btn-sm btn-detection-review';
             link.textContent = 'Review';
-            actionCell.appendChild(link);
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'btn btn-sm btn-detection-delete';
+            deleteButton.textContent = 'Delete';
+            deleteButton.setAttribute('aria-label', `Delete detection for ${item.target_name || 'Unknown'}`);
+            deleteButton.addEventListener('click', () => deleteDetection(item.id, item.target_name || 'this detection'));
+            actions.append(link, deleteButton);
+            actionCell.appendChild(actions);
             row.appendChild(actionCell);
             body.appendChild(row);
         });
@@ -120,6 +151,21 @@ async function loadDetections() {
     } catch (error) {
         message.textContent = error.message;
         body.innerHTML = '<tr><td colspan="7" class="text-danger">Unable to load records. Check the Flask terminal and API response.</td></tr>';
+    }
+
+    async function deleteDetection(id, targetName) {
+        if (!window.confirm(`Delete the detection for "${targetName}"? This cannot be undone.`)) return;
+        const message = document.getElementById('detectionsMessage');
+        message.textContent = `Deleting ${targetName}…`;
+        try {
+            const response = await fetch(`/api/detections/${encodeURIComponent(id)}`, {method: 'DELETE'});
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Could not delete detection.');
+            await loadDetections();
+            message.textContent = `Deleted the detection for ${targetName}.`;
+        } catch (error) {
+            message.textContent = error.message;
+        }
     }
 }
 

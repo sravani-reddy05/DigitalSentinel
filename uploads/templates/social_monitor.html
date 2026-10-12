@@ -3,7 +3,7 @@
 {% block page_heading %}Social Monitoring{% endblock %}
 
 {% block content %}
-<div class="page-intro">
+<div class="page-intro social-page-intro">
     <span class="eyebrow">SOCIAL PROFILE ANALYSIS</span>
     <h1>Social Monitoring</h1>
     <p>Review possible brand impersonation indicators in a manually entered profile.</p>
@@ -14,54 +14,73 @@
     Profile details are entered manually. When a profile URL is supplied, configured VirusTotal and Google Safe Browsing keys check its public URL reputation. This does not fetch profile content.
 </div>
 
-<div class="row g-4">
-    <div class="col-12 col-lg-7">
-        <section class="content-card">
-            <h3>Analyze a social profile</h3>
+<section id="socialAssessment" class="content-card mb-4 risk-assessment-card assessment-risk-pending" aria-live="polite">
+    <div class="assessment-title-row">
+        <div><span class="eyebrow">PROFILE RISK ASSESSMENT</span><h2>Risk assessment</h2><p id="assessmentSummary" class="mb-0 text-muted">Submit a profile to calculate its score, indicators, and recommendations.</p></div>
+        <div class="assessment-score"><span id="assessmentLevel" class="risk-pill assessment-pending">Not assessed</span><strong><span id="assessmentScore">—</span><small>/100</small></strong></div>
+    </div>
+    <div class="assessment-meter" role="group" aria-label="Risk score from low to high">
+        <div class="assessment-meter-track"><span id="assessmentMeterFill" class="assessment-meter-fill"></span></div>
+        <div class="risk-scale"><span><i class="legend-dot low-dot"></i><b>Low</b> 0–34</span><span><i class="legend-dot medium-dot"></i><b>Medium</b> 35–59</span><span><i class="legend-dot high-dot"></i><b>High</b> 60–100</span></div>
+    </div>
+    <div class="assessment-indicators">
+        <article id="usernameCard" class="assessment-indicator indicator-pending"><div class="assessment-indicator-heading"><span class="assessment-indicator-icon"><i class="bi bi-person-badge"></i></span><span id="usernameStatus" class="indicator-status">Not checked</span></div><strong>Username and brand match</strong><p id="usernameIndicator">Run a scan to check similar or misspelled names and extra words.</p></article>
+        <article id="descriptionCard" class="assessment-indicator indicator-pending"><div class="assessment-indicator-heading"><span class="assessment-indicator-icon"><i class="bi bi-chat-square-text"></i></span><span id="descriptionStatus" class="indicator-status">Not checked</span></div><strong>Profile description</strong><p id="descriptionIndicator">Run a scan to check suspicious phrases.</p></article>
+        <article id="logoCard" class="assessment-indicator indicator-pending"><div class="assessment-indicator-heading"><span class="assessment-indicator-icon"><i class="bi bi-image"></i></span><span id="logoStatus" class="indicator-status">Not checked</span></div><strong>Profile logo comparison</strong><p id="logoIndicator">Upload a profile image and save a brand logo to compare.</p></article>
+        <article id="ownershipCard" class="assessment-indicator indicator-unknown"><div class="assessment-indicator-heading"><span class="assessment-indicator-icon"><i class="bi bi-person-lock"></i></span><span id="ownershipStatus" class="indicator-status">Unverified</span></div><strong>Account ownership</strong><p id="ownershipIndicator">Unknown — ownership is not verified by this scan.</p></article>
+        <article id="urlCard" class="assessment-indicator indicator-pending"><div class="assessment-indicator-heading"><span class="assessment-indicator-icon"><i class="bi bi-shield-check"></i></span><span id="urlStatus" class="indicator-status">Not checked</span></div><strong>URL reputation</strong><p id="urlIndicator">Optional: submit a profile URL to query configured providers.</p></article>
+    </div>
+    <div class="row g-4 mt-1">
+        <div class="col-12 col-lg-7"><h3 class="assessment-subheading">Reasons for this rating</h3><ul id="assessmentReasons" class="assessment-reasons"><li>Reasons will be listed here after the profile is analyzed.</li></ul></div>
+        <div class="col-12 col-lg-5"><h3 class="assessment-subheading">Recommended actions</h3><ul id="assessmentActions" class="assessment-actions"><li><strong>Low:</strong> No strong indicators found does not confirm the account is genuine; verify through the official brand website.</li><li><strong>Medium:</strong> Check spelling, image, description, and ownership through a trusted company channel.</li><li><strong>High:</strong> Avoid interacting, preserve evidence, and report suspected impersonation to the platform.</li></ul></div>
+    </div>
+    <p class="assessment-disclaimer"><i class="bi bi-info-circle"></i> The score is a heuristic review signal, not proof of impersonation. Image comparison is a basic pixel estimate and may miss cropped or edited logos.</p>
+</section>
+
+<div class="row g-4 social-monitor-layout">
+    <div class="col-12 col-xl-7">
+        <section class="content-card social-form-card">
+            <div class="form-section-heading"><span class="metric-icon blue"><i class="bi bi-people"></i></span><div><h3>Analyze a social profile</h3><p>Enter the public profile details you want to review.</p></div></div>
             <form id="socialScanForm">
                 <p class="small text-muted">Comparison brand: <strong id="selectedBrandName">{{ brands|selectattr('id', 'equalto', selected_brand_id)|map(attribute='brand_name')|first if selected_brand_id else (brands[0].brand_name if brands else 'Select a brand') }}</strong></p>
-                <label class="form-label" for="socialUsername">Username *</label>
-                <input class="form-control mb-3" id="socialUsername" maxlength="100"
-                       placeholder="e.g. brand_offers_50" required>
+                <div class="row g-3">
+                <div class="col-12 col-md-6"><label class="form-label" for="socialUsername">Username *</label>
+                <input class="form-control" id="socialUsername" maxlength="100" placeholder="e.g. brand_offers_50" required></div>
 
-                <label class="form-label" for="socialPlatform">Platform *</label>
-                <select class="form-select mb-3" id="socialPlatform" required>
+                <div class="col-12 col-md-6"><label class="form-label" for="socialPlatform">Platform *</label>
+                <select class="form-select" id="socialPlatform" required>
                     <option>Instagram</option>
                     <option>Facebook</option>
                     <option>X</option>
                     <option>TikTok</option>
                     <option>Other</option>
-                </select>
+                </select></div>
 
-                <label class="form-label" for="socialBrand">Company profile *</label>
-                <select class="form-select mb-3" id="socialBrand" required>
+                <div class="col-12 col-md-6"><label class="form-label" for="socialBrand">Company profile *</label>
+                <select class="form-select" id="socialBrand" required>
                     {% for brand in brands %}<option value="{{ brand.id }}" {% if selected_brand_id == brand.id %}selected{% endif %}>{{ brand.brand_name }}</option>{% endfor %}
-                </select>
+                </select></div>
 
-                <label class="form-label" for="socialUrl">Profile URL</label>
-                <input class="form-control mb-3" id="socialUrl" type="url"
-                       placeholder="https://example.com/profile">
+                <div class="col-12 col-md-6"><label class="form-label" for="socialUrl">Profile URL</label>
+                <input class="form-control" id="socialUrl" type="url" placeholder="https://instagram.com/brand_profile"></div>
 
-                <label class="form-label" for="profileImage">Profile image (optional)</label>
-                <input class="form-control mb-3" id="profileImage" name="profile_image" type="file" accept="image/png,image/jpeg,image/webp">
-                <small class="form-text text-muted">Compared with the saved brand logo. This is a basic visual signal, not identity verification.</small>
+                <div class="col-12"><label class="form-label" for="profileImage">Profile image (optional)</label>
+                <input class="form-control" id="profileImage" name="profile_image" type="file" accept="image/png,image/jpeg,image/webp">
+                <small class="form-text text-muted">Compared with the saved brand logo. This is a basic visual signal, not identity verification.</small></div>
 
-                <label class="form-label" for="socialDescription">Profile description</label>
-                <textarea class="form-control mb-3" id="socialDescription" rows="4"
-                          maxlength="2000"
-                          placeholder="Paste the public profile description for review…"></textarea>
+                <div class="col-12"><label class="form-label" for="socialDescription">Profile description</label>
+                <textarea class="form-control" id="socialDescription" rows="4" maxlength="2000" placeholder="Paste the public profile description for review…"></textarea></div>
 
-                <button class="btn btn-primary" type="submit">
-                    <i class="bi bi-search"></i> Analyze Profile
-                </button>
+                <div class="col-12"><button class="btn btn-primary app-submit-btn" type="submit"><i class="bi bi-shield-check"></i> Analyze profile</button></div>
+                </div>
             </form>
             <div id="socialMessage" class="mt-3" aria-live="polite"></div>
         </section>
     </div>
 
     <div class="col-12 col-lg-5">
-        <section class="content-card">
-            <h3>What is checked?</h3>
+        <section class="content-card social-indicators-card">
+            <div class="form-section-heading"><span class="metric-icon blue"><i class="bi bi-bullseye"></i></span><div><h3>What is checked?</h3><p>Signals included in the profile review.</p></div></div>
             <ul class="feature-list">
                 <li><i class="bi bi-check-circle"></i> Username similarity to the selected brand</li>
                 <li><i class="bi bi-check-circle"></i> Potentially promotional or risky phrases</li>
@@ -73,6 +92,11 @@
         </section>
     </div>
 </div>
+
+<section class="content-card mt-4 social-recent-card">
+    <div class="section-heading"><div><h3>Recent analyses</h3><p>Latest social profile reviews</p></div><a href="/detections" class="text-link">View all <i class="bi bi-arrow-right"></i></a></div>
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Profile</th><th>Platform</th><th>Risk score</th><th>Status</th><th>Analyzed at</th><th></th></tr></thead><tbody id="socialRecentAnalyses"><tr><td colspan="6" class="text-center text-muted">Loading recent analyses…</td></tr></tbody></table></div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
@@ -99,8 +123,10 @@ document.getElementById('socialScanForm').addEventListener('submit', async event
         if (!response.ok) throw new Error(result.error || `Scan failed (HTTP ${response.status}). Check the Flask terminal for details.`);
         if (!result.risk || !Number.isFinite(Number(result.risk.risk_score))) throw new Error('Analysis response did not include a risk score. Please try again.');
 
-        message.className = 'mt-3 alert alert-success';
+        message.className = `mt-3 alert social-scan-result result-risk-${result.risk.risk_level.toLowerCase()}`;
         message.replaceChildren();
+
+        renderSocialAssessment(result);
 
         const level = result.risk.risk_level;
         const heading = document.createElement('div');
@@ -123,11 +149,144 @@ document.getElementById('socialScanForm').addEventListener('submit', async event
         link.className = 'btn btn-sm btn-outline-success';
         link.textContent = window.dsTranslate ? window.dsTranslate('Review this finding') : 'Review this finding';
         message.append(heading, detail, basis, reasons, link);
+        loadRecentSocialAnalyses();
     } catch (error) {
         message.className = 'mt-3 alert alert-danger';
         message.textContent = error.message;
     }
 });
+
+function renderSocialAssessment(result) {
+    const panel = document.getElementById('socialAssessment');
+    const risk = result.risk, level = risk.risk_level;
+    const assessment = result.assessment || {};
+    const username = assessment.username || result.analysis || {};
+    const score = Math.max(0, Math.min(100, Number(risk.risk_score) || 0));
+    document.getElementById('assessmentSummary').textContent = `Compared with ${result.brand_name || 'the selected brand'} · Score ${score}/100`;
+    const levelBadge = document.getElementById('assessmentLevel');
+    levelBadge.className = `risk-pill risk-${level.toLowerCase()}`;
+    levelBadge.textContent = level;
+    document.getElementById('assessmentScore').textContent = score;
+    const meter = document.getElementById('assessmentMeterFill');
+    meter.style.width = `${score}%`;
+    meter.className = `assessment-meter-fill assessment-risk-${level.toLowerCase()}`;
+
+    const nameStatus = username.likely_misspelling
+        ? `Possible misspelling or look-alike name (${username.similarity}% similarity)`
+        : username.contains_brand
+            ? `Brand name appears in username (${username.similarity}% similarity)`
+            : `Name similarity: ${username.similarity || 0}%`;
+    const extra = (username.suspicious_keywords || []).length
+        ? ` · Extra terms: ${username.suspicious_keywords.join(', ')}`
+        : '';
+    document.getElementById('usernameIndicator').textContent = nameStatus + extra;
+    const usernameSimilarity = Number(username.similarity) || 0;
+    setIndicatorState('usernameCard', 'usernameStatus',
+        usernameSimilarity >= 80 || username.likely_misspelling ? 'high'
+            : usernameSimilarity >= 55 || username.contains_brand ? 'medium' : 'low',
+        usernameSimilarity >= 80 || username.likely_misspelling ? 'Review'
+            : usernameSimilarity >= 55 || username.contains_brand ? 'Caution' : 'Low signal');
+
+    const descriptionPhrases = assessment.description_phrases || [];
+    document.getElementById('descriptionIndicator').textContent = descriptionPhrases.length
+        ? `Suspicious phrases found: ${descriptionPhrases.join(', ')}`
+        : 'No listed suspicious phrases found in the submitted description.';
+    const sensitivePhrases = /password|otp|payment|suspended/i;
+    setIndicatorState('descriptionCard', 'descriptionStatus',
+        descriptionPhrases.some(phrase => sensitivePhrases.test(phrase)) ? 'high'
+            : descriptionPhrases.length ? 'medium' : 'low',
+        descriptionPhrases.some(phrase => sensitivePhrases.test(phrase)) ? 'High concern'
+            : descriptionPhrases.length ? 'Review' : 'No phrases');
+
+    const image = result.image_comparison || {};
+    let imageText = 'No profile image uploaded.';
+    let imageState = 'unknown';
+    if (image.status === 'compared') {
+        imageText = `Compared with the saved brand logo: ${Number(image.similarity || 0).toFixed(0)}% visual similarity.`;
+        imageState = Number(image.similarity || 0) >= 80 ? 'high'
+            : Number(image.similarity || 0) >= 60 ? 'medium' : 'low';
+    } else if (image.status === 'reference_logo_missing') {
+        imageText = 'Image received, but the brand has no saved reference logo to compare.';
+    } else if (image.status === 'comparison_failed') {
+        imageText = 'The image was received, but comparison with the saved brand logo failed.';
+    }
+    document.getElementById('logoIndicator').textContent = imageText;
+    setIndicatorState('logoCard', 'logoStatus', imageState,
+        imageState === 'high' ? 'Strong match' : imageState === 'medium' ? 'Possible match'
+            : imageState === 'low' ? 'Low match' : 'Unavailable');
+
+    const ownership = assessment.ownership || {};
+    document.getElementById('ownershipIndicator').textContent = ownership.message || 'Unknown — account ownership is not independently verified.';
+    setIndicatorState('ownershipCard', 'ownershipStatus', 'unknown', 'Unverified');
+
+    const reputation = result.url_reputation;
+    document.getElementById('urlIndicator').textContent = !reputation
+        ? 'No profile URL supplied; reputation was not checked.'
+        : (reputation.providers || []).map(provider => `${provider.provider}: ${provider.status}`).join(' · ') || reputation.message || 'No provider result.';
+    const providers = reputation?.providers || [];
+    const completedProviders = providers.filter(provider => provider.status === 'complete');
+    const hasUrlThreat = completedProviders.some(provider =>
+        Number(provider.malicious || 0) > 0 ||
+        Number(provider.suspicious || 0) > 0 ||
+        Number(provider.threats_found || 0) > 0
+    );
+    const urlState = hasUrlThreat ? 'high'
+        : completedProviders.length ? 'low' : 'unknown';
+    setIndicatorState('urlCard', 'urlStatus', urlState,
+        hasUrlThreat ? 'Threat found' : completedProviders.length ? 'No match' : 'Not verified');
+
+    const reasons = document.getElementById('assessmentReasons');
+    reasons.replaceChildren();
+    (risk.reasons || []).forEach(reason => { const li = document.createElement('li'); li.textContent = reason; reasons.append(li); });
+    if (ownership.message) { const li = document.createElement('li'); li.textContent = ownership.message; reasons.append(li); }
+    if (image.status === 'compared' && image.similarity >= 70) { const li = document.createElement('li'); li.textContent = `Profile image strongly resembles the saved brand logo (${Number(image.similarity).toFixed(0)}%).`; reasons.append(li); }
+    if (!reasons.children.length) { const li = document.createElement('li'); li.textContent = 'No strong risk indicators were found in the submitted information.'; reasons.append(li); }
+
+    const actions = document.getElementById('assessmentActions');
+    actions.replaceChildren();
+    const recommended = level === 'High'
+        ? ['Do not engage with the profile or follow payment or credential requests.', 'Verify the account using contact details linked from the brand’s official website.', 'Report the suspected impersonation to the platform and preserve screenshots.']
+        : level === 'Medium'
+            ? ['Check the spelling, extra username terms, profile image, and description against official brand channels.', 'Confirm account ownership through a trusted company website or verified contact.', 'Avoid links or requests for passwords, one-time codes, or payment until confirmed.']
+            : ['No strong indicators were found in the supplied details; this does not prove the profile is genuine.', 'Confirm ownership through the brand’s official website before relying on the account.', 'Recheck if the username, image, or profile description changes.'];
+    recommended.forEach(action => { const li = document.createElement('li'); li.textContent = action; actions.append(li); });
+    panel.classList.remove('d-none');
+    panel.classList.remove('assessment-risk-pending', 'assessment-risk-low', 'assessment-risk-medium', 'assessment-risk-high');
+    panel.classList.add(`assessment-risk-${level.toLowerCase()}`);
+    panel.dataset.riskLevel = level.toLowerCase();
+    panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+function setIndicatorState(cardId, statusId, state, label) {
+    const card = document.getElementById(cardId);
+    card.classList.remove('indicator-pending', 'indicator-low', 'indicator-medium', 'indicator-high', 'indicator-unknown');
+    card.classList.add(`indicator-${state}`);
+    document.getElementById(statusId).textContent = label;
+}
+
+async function loadRecentSocialAnalyses() {
+    const body = document.getElementById('socialRecentAnalyses');
+    try {
+        const response = await fetch('/api/detections');
+        if (!response.ok) throw new Error('Could not load recent analyses');
+        const payload = await response.json();
+        const records = (payload.detections || []).filter(item => ['Instagram', 'Facebook', 'X', 'TikTok'].includes(item.platform)).slice(0, 5);
+        body.replaceChildren();
+        if (!records.length) { const row = body.insertRow(); const cell = row.insertCell(); cell.colSpan = 6; cell.className = 'text-center text-muted'; cell.textContent = 'No social profile analyses yet. Your submitted scans will appear here.'; return; }
+        records.forEach(item => {
+            const row = body.insertRow();
+            const nameCell = row.insertCell(); nameCell.textContent = item.target_name || 'Social profile';
+            const platformCell = row.insertCell(); platformCell.textContent = item.platform || 'Other';
+            const scoreCell = row.insertCell(); scoreCell.textContent = `${item.risk_score ?? 0}/100`;
+            const statusCell = row.insertCell();
+            const badge = document.createElement('span'); const riskLevel = item.risk_level === 'Critical' ? 'High' : (item.risk_level || 'Low');
+            badge.className = `scan-risk-level risk-${riskLevel.toLowerCase()}`; badge.textContent = riskLevel; statusCell.append(badge);
+            const timeCell = row.insertCell(); timeCell.textContent = item.created_at || '—';
+            const actionCell = row.insertCell(); const link = document.createElement('a'); link.href = `/detection/${encodeURIComponent(item.id)}`; link.className = 'btn btn-sm btn-outline-primary'; link.textContent = 'Review'; actionCell.append(link);
+        });
+    } catch { body.textContent = 'Recent analyses are unavailable right now.'; }
+}
+loadRecentSocialAnalyses();
 
 document.getElementById('socialBrand').addEventListener('change', event => {
     const selected = event.target.selectedOptions[0];

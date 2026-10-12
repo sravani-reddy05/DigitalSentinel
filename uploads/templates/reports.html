@@ -3,22 +3,22 @@
 {% block page_heading %}Reports & Analytics{% endblock %}
 
 {% block content %}
-<div class="page-intro">
+<div class="page-intro reports-page-intro">
     <span class="eyebrow">INSIGHTS & EXPORTS</span>
     <h1>Reports</h1>
     <p>Review recorded detections and export the available data for further analysis.</p>
 </div>
 
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 reports-metrics">
     <div class="col-12 col-md-6">
-        <div class="metric-card">
+        <div class="metric-card report-metric-card report-total-card">
             <div class="metric-icon blue"><i class="bi bi-database"></i></div>
             <span>Total recorded detections</span>
             <h2 id="reportTotal">—</h2>
         </div>
     </div>
     <div class="col-12 col-md-6">
-        <div class="metric-card">
+        <div class="metric-card report-metric-card report-pending-card">
             <div class="metric-icon orange"><i class="bi bi-clipboard-check"></i></div>
             <span>Pending review</span>
             <h2 id="reportPending">—</h2>
@@ -26,7 +26,7 @@
     </div>
 </div>
 
-<section class="content-card mb-4">
+<section class="content-card mb-4 reports-export-card">
     <div class="section-heading">
         <div><h3>Export report</h3><p>Download saved detection records as CSV.</p></div>
         <i class="bi bi-file-earmark-spreadsheet fs-2 text-primary"></i>
@@ -38,7 +38,7 @@
 
 <div class="row g-4">
     <div class="col-12 col-lg-6">
-        <section class="content-card h-100">
+        <section class="content-card h-100 reports-platform-card">
             <h3>Detections by platform</h3>
             <div id="platformSummary" class="summary-list">
                 <p class="text-muted">Loading report…</p>
@@ -46,7 +46,7 @@
         </section>
     </div>
     <div class="col-12 col-lg-6">
-        <section class="content-card h-100">
+        <section class="content-card h-100 reports-risk-card">
             <h3>Detections by risk level</h3>
             <div id="riskSummary" class="summary-list">
                 <p class="text-muted">Loading report…</p>
@@ -70,7 +70,18 @@ function renderSummary(container, entries, labelKey) {
         const row = document.createElement('div');
         row.className = 'summary-row';
         const label = document.createElement('span');
-        label.textContent = entry[labelKey] || entry.name || 'Unknown';
+        const labelText = entry[labelKey] || entry.name || 'Unknown';
+        label.textContent = labelText;
+        const normalizedLabel = String(labelText).toLowerCase();
+        if (labelKey === 'risk_level') {
+            row.classList.add(normalizedLabel === 'high' || normalizedLabel === 'critical'
+                ? 'summary-risk-high'
+                : normalizedLabel === 'medium' ? 'summary-risk-medium' : 'summary-risk-low');
+        } else if (labelKey === 'status') {
+            row.classList.add(normalizedLabel.includes('threat') ? 'summary-risk-high'
+                : normalizedLabel.includes('review') || normalizedLabel.includes('investigation')
+                    ? 'summary-risk-medium' : 'summary-risk-low');
+        }
         const count = document.createElement('strong');
         count.textContent = entry.count ?? entry.total ?? 0;
         row.append(label, count);

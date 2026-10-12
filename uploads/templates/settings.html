@@ -3,13 +3,13 @@
 {% block page_heading %}Settings{% endblock %}
 
 {% block content %}
-<div class="page-intro">
+<div class="page-intro settings-page-intro">
     <span class="eyebrow">PLATFORM CONFIGURATION</span>
     <h1>Settings</h1>
     <p>Review application configuration and integration readiness.</p>
 </div>
 
-<div class="alert alert-warning">
+<div class="alert alert-warning settings-security-note">
     <i class="bi bi-lock"></i>
     API credentials must be configured on the server in your local `.env` file or
     deployment environment. Never enter or publish secrets in the browser.
@@ -17,8 +17,8 @@
 
 <div class="row g-4">
     <div class="col-12 col-lg-6">
-        <section class="content-card h-100">
-            <h3>Application</h3>
+        <section class="content-card h-100 settings-card settings-application-card">
+            <h3><i class="bi bi-sliders"></i> Application</h3>
             <div class="settings-row">
                 <span><strong>Application name</strong><small>Project identity</small></span>
                 <span>DigitalSentinel</span>
@@ -39,8 +39,8 @@
     </div>
 
     <div class="col-12 col-lg-6">
-        <section class="content-card h-100">
-            <h3>Integration readiness</h3>
+        <section class="content-card h-100 settings-card settings-integrations-card">
+            <h3><i class="bi bi-plug"></i> Integration readiness</h3>
             <p class="text-muted">Status below describes the current implementation, not live connectivity.</p>
             <div class="settings-row">
                 <span><strong>Groq assistant</strong><small>Requires a valid server-side API key</small></span>
@@ -62,8 +62,8 @@
     </div>
 </div>
 
-<section class="content-card mt-4">
-    <h3>Configuration checklist</h3>
+<section class="content-card mt-4 settings-card settings-checklist-card">
+    <h3><i class="bi bi-check2-square"></i> Configuration checklist</h3>
     <ul class="feature-list">
         <li>Keep `.env` out of GitHub.</li>
         <li>Set a strong `SECRET_KEY` for deployment.</li>

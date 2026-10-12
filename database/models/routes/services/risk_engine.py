@@ -53,7 +53,12 @@ def calculate_risk(
         "verify account": 10,
         "send password": 20,
         "enter otp": 20,
-        "payment required": 10
+        "payment required": 10,
+        "account suspended": 12,
+        "urgent action": 8,
+        "click the link": 8,
+        "contact support": 8,
+        "official support": 8
     }
 
     matches = [(keyword, points) for keyword, points in keywords.items() if keyword in text]

@@ -13,6 +13,13 @@ from PIL import Image, UnidentifiedImageError
 
 social_bp = Blueprint("social", __name__)
 
+SUSPICIOUS_DESCRIPTION_PHRASES = (
+    "free", "giveaway", "claim prize", "limited offer", "verify account",
+    "send password", "enter otp", "verify account", "claim prize",
+    "payment required", "free giveaway", "official support", "contact support",
+    "click the link", "urgent action", "account suspended",
+)
+
 
 @social_bp.route("/social-monitor")
 def social_page():
@@ -60,10 +67,11 @@ def scan_social_profile():
         target_name,
         brand["brand_name"]
     )
+    description_signals = list(dict.fromkeys(phrase for phrase in SUSPICIOUS_DESCRIPTION_PHRASES if phrase in description.lower()))
 
-    visual_similarity = 0
-    image_notice = None
-    if candidate_image and candidate_image.filename and brand.get("logo_path"):
+    visual_similarity = None
+    image_comparison = {"status": "not_uploaded", "similarity": None}
+    if candidate_image and candidate_image.filename:
         if Path(candidate_image.filename).suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp"}:
             return jsonify({"error": "Profile image must be PNG, JPG, JPEG, or WEBP"}), 400
         try:
@@ -71,9 +79,15 @@ def scan_social_profile():
             with Image.open(candidate_image.stream) as image:
                 image.verify()
             candidate_image.stream.seek(0)
-            comparison = compare_image_upload(Path(Config.UPLOAD_FOLDER) / brand["logo_path"], candidate_image)
-            visual_similarity = comparison.get("similarity", 0)
-            image_notice = comparison.get("notice") or comparison.get("error")
+            if brand.get("logo_path"):
+                comparison = compare_image_upload(Path(Config.UPLOAD_FOLDER) / brand["logo_path"], candidate_image)
+                visual_similarity = comparison.get("similarity", 0) if not comparison.get("error") else None
+                image_comparison = {"status": "compared" if visual_similarity is not None else "comparison_failed", "similarity": visual_similarity,
+                                    "method": comparison.get("method"),
+                                    "notice": comparison.get("notice") or comparison.get("error")}
+            else:
+                image_comparison = {"status": "reference_logo_missing", "similarity": None,
+                                    "notice": "Upload an approved brand logo to compare profile images."}
         except (UnidentifiedImageError, OSError, ValueError):
             return jsonify({"error": "Profile image must be a valid PNG, JPG, JPEG, or WEBP image"}), 400
 
@@ -94,7 +108,7 @@ def scan_social_profile():
 
     reputation = check_url_reputation(target_url) if target_url else None
     risk = apply_reputation(risk, reputation)
-    if visual_similarity >= 70:
+    if visual_similarity is not None and visual_similarity >= 70:
         risk["reasons"].append(f"Submitted profile image is visually similar to the saved brand logo ({visual_similarity:.0f}%)")
 
     detection_id = create_detection(
@@ -115,7 +129,13 @@ def scan_social_profile():
         "detection_id": detection_id,
         "analysis": analysis,
         "brand_name": brand["brand_name"],
-        "visual_similarity": visual_similarity if candidate_image else None,
+        "visual_similarity": visual_similarity,
+        "image_comparison": image_comparison,
+        "assessment": {
+            "username": analysis,
+            "description_phrases": description_signals,
+            "ownership": {"status": "unverified", "message": "Account ownership cannot be confirmed from manually submitted profile details."},
+        },
         "url_reputation": reputation,
         "risk": risk,
         "notice": (

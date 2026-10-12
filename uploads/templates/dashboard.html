@@ -3,176 +3,90 @@
 {% block page_heading %}Security Dashboard{% endblock %}
 
 {% block content %}
-<section class="welcome-section">
+<section class="welcome-section dashboard-hero">
     <div>
         <span class="eyebrow">YOUR SECURITY OVERVIEW</span>
-        <h1>Good day, Security Team</h1>
-        <p>Monitor possible impersonation indicators and review risks in one place.</p>
+        <h1>DigitalSentinel</h1>
+        <p>Detect · Analyze · Protect<br>Your AI-powered Digital Risk Protection Platform for a safer and more trusted internet.</p>
     </div>
     <div class="hero-visual" aria-hidden="true">
         <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
         <div class="hero-core"><i class="bi bi-shield-lock-fill"></i><span class="core-pulse"></span></div>
-        <span class="hero-signal signal-one"><i class="bi bi-globe2"></i></span>
-        <span class="hero-signal signal-two"><i class="bi bi-at"></i></span>
-        <span class="hero-signal signal-three"><i class="bi bi-phone"></i></span>
+        <span class="hero-signal signal-one"><i class="bi bi-globe2"></i></span><span class="hero-signal signal-two"><i class="bi bi-at"></i></span><span class="hero-signal signal-three"><i class="bi bi-phone"></i></span>
         <span class="hero-spark spark-one"></span><span class="hero-spark spark-two"></span><span class="hero-spark spark-three"></span>
     </div>
-    <a href="/social-monitor" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> New Scan
-    </a>
+    <div class="dashboard-hero-actions"><a href="/social-monitor" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Scan</a><a href="/reports/export.csv" class="btn btn-outline-primary"><i class="bi bi-download"></i> Export Report</a></div>
 </section>
 
-<section class="content-card mb-4">
-    <div class="section-heading"><div><h3>Demo companies</h3><p>Choose a fictional company, then open a focused social or app review screen.</p></div><span class="demo-pill">Sample data</span></div>
-    <div class="row g-3">
-        {% for brand in brands %}
-        <div class="col-12 col-md-6 col-xl-4"><article class="company-card">
-            <span class="metric-icon purple"><i class="bi bi-buildings"></i></span>
-            <h4>{{ brand.brand_name }}</h4><p>{{ brand.description }}</p>
-            <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-sm btn-primary" href="{{ url_for('social.social_page', brand_id=brand.id) }}"><i class="bi bi-people"></i> Social scan</a>
-                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('app_store.app_monitor_page', brand_id=brand.id) }}"><i class="bi bi-phone"></i> App scan</a>
-            </div>
-        </article></div>
-        {% else %}<div class="col-12"><p class="text-muted mb-0">Run <code>python -m database.seed_data</code> to add five fictional companies.</p></div>{% endfor %}
-    </div>
+<section class="row g-3 metric-grid dashboard-metrics">
+    <div class="col-6 col-xl-3"><a class="metric-card metric-card-link dashboard-stat high" href="/detections?risk=High"><span class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></span><span>High Risk Threats</span><h2 id="highDetections">—</h2><small>Needs review</small></a></div>
+    <div class="col-6 col-xl-3"><a class="metric-card metric-card-link dashboard-stat medium" href="/detections?risk=Medium"><span class="stat-icon"><i class="bi bi-exclamation-circle-fill"></i></span><span>Medium Risk</span><h2 id="mediumDetections">—</h2><small>Keep monitoring</small></a></div>
+    <div class="col-6 col-xl-3"><a class="metric-card metric-card-link dashboard-stat low" href="/detections?risk=Low"><span class="stat-icon"><i class="bi bi-check-circle-fill"></i></span><span>Low Risk</span><h2 id="lowDetections">—</h2><small>No strong indicators</small></a></div>
+    <div class="col-6 col-xl-3"><a class="metric-card metric-card-link dashboard-stat total" href="/detections"><span class="stat-icon"><i class="bi bi-bar-chart-fill"></i></span><span>Total Scans</span><h2 id="totalDetections">—</h2><small>All recorded analyses</small></a></div>
 </section>
 
-<div class="alert alert-info" data-i18n="URL checks use configured threat reputation providers. Social profiles and app listings are analyzed from details you submit; the site does not scrape those platforms.">
-    <i class="bi bi-info-circle"></i>
-    URL checks use configured threat reputation providers. Social profiles and app listings are analyzed from details you submit; the site does not scrape those platforms.
-</div>
+<section class="row g-3 dashboard-analytics">
+    <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card h-100"><div class="section-heading"><div><h3>Risk Overview</h3><p>Distribution across all scans</p></div><span class="chart-period">All time</span></div><div class="risk-overview-body"><div class="risk-donut" id="riskDonut"><div><strong id="highRiskShare">0%</strong><small>High Risk</small></div></div><div class="risk-legend"><div><i class="legend-dot high-dot"></i><span>High Risk</span><strong id="legendHigh">0</strong></div><div><i class="legend-dot medium-dot"></i><span>Medium Risk</span><strong id="legendMedium">0</strong></div><div><i class="legend-dot low-dot"></i><span>Low Risk</span><strong id="legendLow">0</strong></div></div></div></article></div>
+    <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card h-100"><div class="section-heading"><div><h3>Threat Trend</h3><p>Daily scans · last 7 days</p></div><div class="chart-key"><span><i class="legend-dot high-dot"></i>High</span><span><i class="legend-dot medium-dot"></i>Medium</span><span><i class="legend-dot low-dot"></i>Low</span></div></div><div class="trend-chart-wrap"><svg id="trendChart" class="trend-chart" viewBox="0 0 520 220" role="img" aria-label="Daily scan risk trend for the last seven days"></svg></div></article></div>
+    <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card recent-threats-card h-100"><div class="section-heading"><div><h3>Recent Detections</h3><p>Latest profiles and listings</p></div><a href="/detections" class="text-link">View All <i class="bi bi-arrow-right"></i></a></div><div id="recentDetections" class="recent-detection-list"><p class="text-muted">Loading detections…</p></div></article></div>
+</section>
 
-<div class="row g-3 metric-grid">
-    <div class="col-12 col-sm-6 col-xl-3">
-        <a class="metric-card metric-card-link" href="/detections">
-            <div class="metric-icon blue"><i class="bi bi-radar"></i></div>
-            <span>Total detections</span>
-            <h2 id="totalDetections">—</h2>
-            <small>Records in the database</small>
-        </a>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <a class="metric-card metric-card-link" href="/detections?risk=High">
-            <div class="metric-icon red"><i class="bi bi-shield-exclamation"></i></div>
-            <span>High risk</span>
-            <h2 id="highDetections">—</h2>
-            <small>Scores of 60–100</small>
-        </a>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <a class="metric-card metric-card-link" href="/detections?status=Needs%20Review">
-            <div class="metric-icon orange"><i class="bi bi-hourglass-split"></i></div>
-            <span>Needs review</span>
-            <h2 id="reviewDetections">—</h2>
-            <small>Awaiting a review decision</small>
-        </a>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <a class="metric-card metric-card-link" href="/settings">
-            <div class="metric-icon green"><i class="bi bi-check-circle"></i></div>
-            <span>Sources</span>
-            <h2>Manual</h2>
-            <small>Manual entry and sample data</small>
-        </a>
-    </div>
-</div>
-
-<div class="row g-4 mt-1">
-    <div class="col-12 col-xl-8">
-        <section class="content-card h-100">
-            <div class="section-heading">
-                <div>
-                    <h3>Recent detections</h3>
-                    <p>Latest records requiring attention</p>
-                </div>
-                <a href="/detections" class="text-link">View all <i class="bi bi-arrow-right"></i></a>
-            </div>
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead>
-                    <tr><th>Target</th><th>Platform</th><th>Risk</th><th>Status</th><th></th></tr>
-                    </thead>
-                    <tbody id="recentDetections">
-                    <tr><td colspan="5" class="text-center text-muted">Loading records…</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-
-    <div class="col-12 col-xl-4">
-        <section class="content-card h-100">
-            <div class="section-heading">
-                <div><h3>Quick actions</h3><p>Start a review workflow</p></div>
-            </div>
-            <div class="quick-actions">
-                <a href="/social-monitor"><i class="bi bi-people"></i><span><strong>Analyze a social profile</strong><small>Review a username and description</small></span><i class="bi bi-chevron-right"></i></a>
-                <a href="/app-monitor"><i class="bi bi-phone"></i><span><strong>Analyze an app listing</strong><small>Check name and publisher indicators</small></span><i class="bi bi-chevron-right"></i></a>
-                <a href="/reports"><i class="bi bi-file-earmark-bar-graph"></i><span><strong>View reports</strong><small>Summaries and CSV export</small></span><i class="bi bi-chevron-right"></i></a>
-                <a href="/assistant"><i class="bi bi-stars"></i><span><strong>Ask the assistant</strong><small>Understand risk indicators</small></span><i class="bi bi-chevron-right"></i></a>
-            </div>
-        </section>
-    </div>
-</div>
+<section class="row g-3 dashboard-shortcuts">
+    <div class="col-12 col-lg-4"><article class="content-card shortcut-card quick-analysis-card"><div class="section-heading"><div><h3>Quick Analysis</h3><p>Choose a scan type to begin</p></div></div><div class="analysis-tabs"><a href="/social-monitor"><i class="bi bi-at"></i> Social</a><a href="/app-monitor"><i class="bi bi-phone"></i> App</a><a href="/reports"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a></div><p class="quick-analysis-hint">Review submitted profiles and listings, then inspect their risk score.</p><a class="btn btn-primary w-100" href="/social-monitor"><i class="bi bi-search"></i> Start Analysis</a></article></div>
+    <div class="col-12 col-lg-4"><article class="content-card shortcut-card brand-protection-card"><div class="section-heading"><div><h3>Brand Protection</h3><p>Logo similarity and suspicious URL checks</p></div><a href="/brands" class="text-link">Manage</a></div><label class="visually-hidden" for="dashboardBrandSelect">Select a brand</label><select class="form-select mb-3" id="dashboardBrandSelect">{% for brand in brands %}<option value="{{ brand.id }}">{{ brand.brand_name }}</option>{% endfor %}</select><div class="protected-brand-preview"><span class="brand-preview-icon"><i class="bi bi-buildings"></i></span><div><strong id="dashboardBrandName">{{ brands[0].brand_name if brands else 'No brand registered' }}</strong><small><i class="bi bi-shield-check"></i> Ready for review</small></div></div><div class="d-flex gap-2 mt-3"><a id="dashboardSocialLink" class="btn btn-sm btn-primary flex-fill" href="{{ url_for('social.social_page', brand_id=brands[0].id) if brands else '/brands' }}">Social Scan</a><a id="dashboardAppLink" class="btn btn-sm btn-outline-primary flex-fill" href="{{ url_for('app_store.app_monitor_page', brand_id=brands[0].id) if brands else '/brands' }}">App Scan</a></div><a class="btn btn-sm btn-brand-primary w-100 mt-2" href="/brands"><i class="bi bi-shield-search"></i> Logo &amp; URL Check</a></article></div>
+    <div class="col-12 col-lg-4"><article class="content-card shortcut-card assistant-shortcut"><div class="section-heading"><div><h3>Security Assistant</h3><p>Understand a risk result</p></div></div><div class="assistant-preview"><span class="assistant-orb"><i class="bi bi-robot"></i></span><p>Hello! I’m your DigitalSentinel assistant. Ask about scores or security indicators.</p></div><a href="/assistant" class="btn btn-outline-primary w-100">Ask the assistant <i class="bi bi-arrow-right"></i></a></article></div>
+</section>
+<p class="dashboard-footnote"><i class="bi bi-info-circle"></i> URL reputation uses configured providers. Social profiles and app listings are reviewed from details you submit.</p>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 async function loadDashboard() {
     try {
-        const [statsResponse, recentResponse] = await Promise.all([
-            fetch('/api/dashboard/stats'),
-            fetch('/api/dashboard/recent')
-        ]);
-        if (!statsResponse.ok || !recentResponse.ok) throw new Error('API request failed');
-
-        const stats = await statsResponse.json();
-        const recent = await recentResponse.json();
-
-        document.getElementById('totalDetections').textContent =
-            stats.total_detections ?? stats.total ?? 0;
-        document.getElementById('highDetections').textContent =
-            stats.high_risk ?? 0;
-        document.getElementById('reviewDetections').textContent =
-            stats.needs_review ?? stats.review ?? 0;
-
-        const rows = Array.isArray(recent) ? recent : (recent.detections || []);
-        const tbody = document.getElementById('recentDetections');
-
-        if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No detections yet. Start a scan to create a record.</td></tr>';
-            return;
-        }
-
-        tbody.replaceChildren();
-        rows.forEach(item => {
-            const tr = document.createElement('tr');
-            const target = document.createElement('td');
-            const platform = document.createElement('td');
-            const risk = document.createElement('td');
-            const status = document.createElement('td');
-            const action = document.createElement('td');
-
-            target.textContent = item.target_name || 'Unknown';
-            platform.textContent = item.platform || '—';
-            risk.textContent = `${item.risk_level || 'Unknown'} (${item.risk_score ?? 0})`;
-            status.textContent = item.status || 'Needs Review';
-
-            const link = document.createElement('a');
-            link.href = `/detection/${encodeURIComponent(item.id)}`;
-            link.className = 'btn btn-sm btn-light';
-            link.textContent = window.dsTranslate ? window.dsTranslate('View') : 'View';
-            action.appendChild(link);
-
-            tr.append(target, platform, risk, status, action);
-            tbody.appendChild(tr);
-        });
+        const [statsResponse, recentResponse] = await Promise.all([fetch('/api/dashboard/stats'), fetch('/api/dashboard/recent')]);
+        if (!statsResponse.ok || !recentResponse.ok) throw new Error('Dashboard data unavailable');
+        const stats = await statsResponse.json(), recent = await recentResponse.json();
+        const counts = stats.risk_counts || {};
+        const high = Number(counts.High ?? stats.high_risk ?? 0), medium = Number(counts.Medium ?? stats.medium_risk ?? 0), low = Number(counts.Low ?? stats.low_risk ?? 0), total = Number(stats.total_detections ?? 0);
+        document.getElementById('highDetections').textContent = high;
+        document.getElementById('mediumDetections').textContent = medium;
+        document.getElementById('lowDetections').textContent = low;
+        document.getElementById('totalDetections').textContent = total;
+        document.getElementById('legendHigh').textContent = high;
+        document.getElementById('legendMedium').textContent = medium;
+        document.getElementById('legendLow').textContent = low;
+        document.getElementById('highRiskShare').textContent = `${total ? Math.round(high * 100 / total) : 0}%`;
+        const highPct = total ? high * 100 / total : 0, medPct = total ? medium * 100 / total : 0;
+        document.getElementById('riskDonut').style.background = total ? `conic-gradient(#f04455 0 ${highPct}%, #f5a623 ${highPct}% ${highPct + medPct}%, #17c995 ${highPct + medPct}% 100%)` : '#e8edf5';
+        drawThreatTrend(stats.trend || []);
+        renderRecentDetections(recent.detections || []);
+        setupBrandSelector();
     } catch (error) {
-        document.getElementById('recentDetections').innerHTML =
-            '<tr><td colspan="5" class="text-center text-danger">Could not load dashboard data. Check Flask terminal and API routes.</td></tr>';
+        const recent = document.getElementById('recentDetections'); recent.textContent = 'Dashboard data could not be loaded.';
     }
 }
+function renderRecentDetections(items) {
+    const target = document.getElementById('recentDetections'); target.replaceChildren();
+    if (!items.length) { target.textContent = 'No scans yet. Start an analysis to see findings here.'; return; }
+    items.slice(0, 4).forEach(item => {
+        const level = item.risk_level === 'Critical' ? 'High' : (item.risk_level || 'Low');
+        const row = document.createElement('a'); row.className = 'recent-detection-item'; row.href = `/detection/${encodeURIComponent(item.id)}`;
+        const icon = document.createElement('span'); icon.className = `recent-alert-icon ${level.toLowerCase()}`; icon.innerHTML = level === 'High' ? '<i class="bi bi-exclamation-triangle-fill"></i>' : level === 'Medium' ? '<i class="bi bi-exclamation-circle-fill"></i>' : '<i class="bi bi-info-circle-fill"></i>';
+        const copy = document.createElement('span'); copy.className = 'recent-detection-copy'; const title = document.createElement('strong'); title.textContent = item.target_name || 'Unknown target'; const sub = document.createElement('small'); sub.textContent = `${item.target_url || item.platform || 'Scan'} · ${item.created_at || ''}`; copy.append(title, sub);
+        const badge = document.createElement('span'); badge.className = `risk-pill risk-${level.toLowerCase()}`; badge.textContent = level; row.append(icon, copy, badge); target.append(row);
+    });
+}
+function drawThreatTrend(rows) {
+    const svg=document.getElementById('trendChart'), ns='http://www.w3.org/2000/svg', w=520,h=220,p={l:36,r:12,t:14,b:34}; svg.replaceChildren();
+    const days=[]; for(let n=6;n>=0;n--){const d=new Date();d.setDate(d.getDate()-n);days.push(d);}
+    const key=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`, byDay=Object.fromEntries(rows.map(r=>[r.day,r]));
+    const series=['high','medium','low'], colors={high:'#f04455',medium:'#f5a623',low:'#17c995'}, all=days.flatMap(d=>series.map(s=>Number((byDay[key(d)]||{})[s]||0))), max=Math.max(4,...all), iw=w-p.l-p.r, ih=h-p.t-p.b;
+    const add=(tag,attrs,label)=>{const el=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));if(label)el.textContent=label;svg.append(el);return el;};
+    for(let i=0;i<=4;i++){const y=p.t+ih-i*ih/4;add('line',{x1:p.l,y1:y,x2:w-p.r,y2:y,class:'chart-gridline'});add('text',{x:p.l-8,y:y+4,'text-anchor':'end',class:'chart-axis-label'},String(Math.round(max*i/4)));}
+    days.forEach((d,i)=>add('text',{x:p.l+iw*i/6,y:h-8,'text-anchor':'middle',class:'chart-axis-label'},d.toLocaleDateString(undefined,{weekday:'short'})));
+    series.forEach(s=>{const pts=days.map((d,i)=>[p.l+iw*i/6,p.t+ih-Number((byDay[key(d)]||{})[s]||0)/max*ih]);add('polyline',{points:pts.map(x=>x.join(',')).join(' '),fill:'none',stroke:colors[s],'stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'});pts.forEach(([x,y])=>add('circle',{cx:x,cy:y,r:3.5,fill:colors[s]}));});
+}
+function setupBrandSelector(){const sel=document.getElementById('dashboardBrandSelect');if(!sel||!sel.value)return;const update=()=>{const id=sel.value,name=sel.selectedOptions[0]?.textContent||'Brand';document.getElementById('dashboardBrandName').textContent=name;document.getElementById('dashboardSocialLink').href=`/social-monitor?brand_id=${encodeURIComponent(id)}`;document.getElementById('dashboardAppLink').href=`/app-monitor?brand_id=${encodeURIComponent(id)}`;};sel.addEventListener('change',update);update();}
 loadDashboard();
 </script>
 {% endblock %}

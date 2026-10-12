@@ -10,7 +10,8 @@ except ImportError:
 
 SUSPICIOUS_KEYWORDS = {
     "official", "offers", "deals", "free", "giveaway",
-    "discount", "support", "claim", "winner", "promo"
+    "discount", "support", "help", "service", "customer", "team",
+    "verify", "account", "claim", "winner", "promo"
 }
 
 
@@ -59,6 +60,9 @@ def analyze_username(username, brand_name):
 
     words = set(re.findall(r"[a-z0-9]+", username.lower()))
     suspicious = sorted(words.intersection(SUSPICIOUS_KEYWORDS))
+    brand_tokens = {normalize_text(term) for term in re.findall(r"[A-Za-z0-9]+", brand_core)}
+    extra_words = sorted(word for word in words if word not in brand_tokens and not word.isdigit())
+    likely_misspelling = bool(similarity >= 55 and not contains_brand)
 
     reasons = []
 
@@ -67,8 +71,13 @@ def analyze_username(username, brand_name):
 
     if similarity >= 80:
         reasons.append("Username is highly similar to the brand name")
+    elif likely_misspelling:
+        reasons.append("Username resembles the brand name; check for a spelling variation")
     elif similarity >= 55:
         reasons.append("Username has moderate similarity to the brand name")
+
+    if suspicious:
+        reasons.append("Username includes extra trust or promotion terms: " + ", ".join(suspicious))
 
     if suspicious:
         reasons.append(
@@ -82,5 +91,7 @@ def analyze_username(username, brand_name):
         "similarity": similarity,
         "contains_brand": contains_brand,
         "suspicious_keywords": suspicious,
+        "extra_words": extra_words,
+        "likely_misspelling": likely_misspelling,
         "reasons": reasons
     }

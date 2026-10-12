@@ -3,64 +3,95 @@
 {% block page_heading %}App Monitoring{% endblock %}
 
 {% block content %}
-<div class="page-intro">
+<div class="page-intro app-page-intro">
     <span class="eyebrow">APPLICATION LISTING ANALYSIS</span>
     <h1>App Monitoring</h1>
     <p>Review app listings for possible brand-name misuse, suspicious descriptions, and logo similarity.</p>
 </div>
 
-<div class="alert alert-info">
+<div class="alert alert-info app-monitor-note">
     <i class="bi bi-info-circle"></i>
     Enter listing details manually. When a listing URL is supplied, configured VirusTotal and Google Safe Browsing keys check its public URL reputation.
 </div>
 
-<div class="row g-4">
-    <div class="col-12 col-lg-7">
-        <section class="content-card">
-            <h3>Analyze an app listing</h3>
+<section class="app-analytics-section" aria-label="App risk analytics">
+    <div class="app-analytics-heading">
+        <div><span class="eyebrow">RISK INTELLIGENCE</span><h2>App risk analytics</h2><p>Risk profile and scan activity across app listings.</p></div>
+        <span class="app-analytics-live"><i class="bi bi-arrow-repeat"></i> Based on saved scans</span>
+    </div>
+    <div class="row g-3">
+        <div class="col-12 col-lg-5">
+            <article class="content-card app-chart-card app-distribution-card">
+                <div class="section-heading"><div><h3>Risk distribution</h3><p>Saved app listing assessments</p></div><i class="bi bi-pie-chart-fill app-chart-heading-icon"></i></div>
+                <div class="app-donut-layout">
+                    <div class="app-donut-wrap">
+                        <svg id="appRiskDonut" class="app-risk-donut" viewBox="0 0 180 180" role="img" aria-label="App risk distribution chart">
+                            <circle class="app-donut-track" cx="90" cy="90" r="66"></circle>
+                            <g id="appRiskDonutSegments" transform="rotate(-90 90 90)"></g>
+                        </svg>
+                        <div class="app-donut-center"><strong id="appChartTotal">0</strong><small>SCANS</small></div>
+                    </div>
+                    <div class="app-chart-legend">
+                        <div><i class="app-legend-dot high"></i><span>High risk</span><strong id="appChartHigh">0</strong></div>
+                        <div><i class="app-legend-dot medium"></i><span>Medium risk</span><strong id="appChartMedium">0</strong></div>
+                        <div><i class="app-legend-dot low"></i><span>Low risk</span><strong id="appChartLow">0</strong></div>
+                    </div>
+                </div>
+                <p id="appDonutCaption" class="app-chart-caption">Risk levels will appear when app scans are available.</p>
+            </article>
+        </div>
+        <div class="col-12 col-lg-7">
+            <article class="content-card app-chart-card app-trend-card">
+                <div class="section-heading"><div><h3>Seven-day scan trend</h3><p>Daily app listing scans by risk level</p></div><i class="bi bi-bar-chart-line-fill app-chart-heading-icon"></i></div>
+                <div class="app-trend-legend"><span><i class="app-legend-dot high"></i>High</span><span><i class="app-legend-dot medium"></i>Medium</span><span><i class="app-legend-dot low"></i>Low</span></div>
+                <div class="app-trend-chart-wrap"><svg id="appRiskTrend" class="app-risk-trend" viewBox="0 0 560 220" role="img" aria-label="Stacked bar chart of app scans by risk level over the last seven days"></svg></div>
+                <p id="appTrendCaption" class="app-chart-caption">Daily scan activity will appear here.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4 app-monitor-layout">
+    <div class="col-12 col-xl-7">
+        <section class="content-card app-form-card">
+            <div class="form-section-heading"><span class="metric-icon blue"><i class="bi bi-phone"></i></span><div><h3>Analyze an app listing</h3><p>Enter public listing details to review possible brand impersonation.</p></div></div>
             <form id="appScanForm">
-                <label class="form-label" for="appName">App name *</label>
-                <input class="form-control mb-3" id="appName" maxlength="150"
-                       placeholder="e.g. Brand Rewards Center" required>
+                <div class="row g-3">
+                <div class="col-12 col-md-6"><label class="form-label" for="appName">App name *</label>
+                <input class="form-control" id="appName" maxlength="150" placeholder="e.g. Brand Rewards Center" required></div>
 
-                <label class="form-label" for="appPlatform">Store *</label>
-                <select class="form-select mb-3" id="appPlatform">
-                    <option>Google Play</option>
-                    <option>Apple App Store</option>
-                    <option>Other</option>
-                </select>
+                <div class="col-12 col-md-6"><label class="form-label" for="appPlatform">Store *</label>
+                <select class="form-select" id="appPlatform">
+                    <option>Google Play</option><option>Apple App Store</option><option>Other</option>
+                </select></div>
 
-                <label class="form-label" for="appBrand">Company profile *</label>
-                <select class="form-select mb-3" id="appBrand" required>
+                <div class="col-12 col-md-6"><label class="form-label" for="appBrand">Company profile *</label>
+                <select class="form-select" id="appBrand" required>
                     {% for brand in brands %}<option value="{{ brand.id }}" {% if selected_brand_id == brand.id %}selected{% endif %}>{{ brand.brand_name }}</option>{% endfor %}
-                </select>
+                </select></div>
 
-                <label class="form-label" for="appPublisher">Publisher / developer</label>
-                <input class="form-control mb-3" id="appPublisher" maxlength="200"
-                       placeholder="Publisher name">
+                <div class="col-12 col-md-6"><label class="form-label" for="appPublisher">Publisher / developer</label>
+                <input class="form-control" id="appPublisher" maxlength="200" placeholder="Publisher name"></div>
 
-                <label class="form-label" for="appUrl">Listing URL</label>
-                <input class="form-control mb-3" id="appUrl" type="url"
-                       placeholder="https://example.com/listing">
+                <div class="col-12"><label class="form-label" for="appUrl">Listing URL</label>
+                <input class="form-control" id="appUrl" type="url" placeholder="https://play.google.com/store/apps/details?id=…"></div>
 
-                <label class="form-label" for="appIcon">App icon (optional)</label>
-                <input class="form-control mb-3" id="appIcon" type="file" accept="image/png,image/jpeg,image/webp">
+                <div class="col-12"><label class="form-label" for="appIcon">App icon (optional)</label>
+                <input class="form-control" id="appIcon" type="file" accept="image/png,image/jpeg,image/webp"></div>
 
-                <label class="form-label" for="appDescription">App description</label>
-                <textarea class="form-control mb-3" id="appDescription" rows="4"
-                          maxlength="2000" placeholder="Enter the listing description…"></textarea>
+                <div class="col-12"><label class="form-label" for="appDescription">App description</label>
+                <textarea class="form-control" id="appDescription" rows="4" maxlength="2000" placeholder="Paste the app description for review…"></textarea></div>
 
-                <button class="btn btn-primary" type="submit">
-                    <i class="bi bi-search"></i> Analyze App
-                </button>
+                <div class="col-12"><button class="btn btn-primary app-submit-btn" type="submit"><i class="bi bi-shield-check"></i> Analyze listing</button></div>
+                </div>
             </form>
             <div id="appMessage" class="mt-3" aria-live="polite"></div>
         </section>
     </div>
 
     <div class="col-12 col-lg-5">
-        <section class="content-card">
-            <h3>Analysis indicators</h3>
+        <section class="content-card app-indicators-card">
+            <div class="form-section-heading"><span class="metric-icon green"><i class="bi bi-bullseye"></i></span><div><h3>Analysis indicators</h3><p>Signals used in the risk score.</p></div></div>
             <div class="indicator-item"><i class="bi bi-fonts"></i><span><strong>Name similarity</strong><small>How closely the listing name matches the brand</small></span></div>
             <div class="indicator-item"><i class="bi bi-person-badge"></i><span><strong>Publisher context</strong><small>Publisher information is recorded for review</small></span></div>
             <div class="indicator-item"><i class="bi bi-chat-square-text"></i><span><strong>Description phrases</strong><small>Potentially risky wording in the submitted text</small></span></div>
@@ -70,6 +101,11 @@
         </section>
     </div>
 </div>
+
+<section class="content-card mt-4 app-recent-card">
+    <div class="section-heading"><div><h3>Recent analyses</h3><p>Latest app listing reviews</p></div><a href="/detections" class="text-link">View all <i class="bi bi-arrow-right"></i></a></div>
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>App name</th><th>Store</th><th>Risk score</th><th>Status</th><th>Analyzed at</th><th></th></tr></thead><tbody id="appRecentAnalyses"><tr><td colspan="6" class="text-center text-muted">Loading recent analyses…</td></tr></tbody></table></div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
@@ -97,7 +133,7 @@ document.getElementById('appScanForm').addEventListener('submit', async event =>
         if (!response.ok) throw new Error(result.error || `Analysis failed (HTTP ${response.status}). Check the Flask terminal for details.`);
         if (!result.risk || !Number.isFinite(Number(result.risk.risk_score))) throw new Error('Analysis response did not include a risk score. Please try again.');
 
-        message.className = 'mt-3 alert alert-success';
+        message.className = `mt-3 alert app-scan-result result-risk-${result.risk.risk_level.toLowerCase()}`;
         message.replaceChildren();
 
         const level = result.risk.risk_level;
@@ -121,11 +157,150 @@ document.getElementById('appScanForm').addEventListener('submit', async event =>
         link.className = 'btn btn-sm btn-outline-success';
         link.textContent = window.dsTranslate ? window.dsTranslate('Review this finding') : 'Review this finding';
         message.append(title, score, basis, reasons, link);
+        loadRecentAppAnalyses();
     } catch (error) {
         message.className = 'mt-3 alert alert-danger';
         message.textContent = error.message;
     }
 });
+
+async function loadRecentAppAnalyses() {
+    const body = document.getElementById('appRecentAnalyses');
+    try {
+        const response = await fetch('/api/detections');
+        if (!response.ok) throw new Error('Could not load recent analyses');
+        const payload = await response.json();
+        const appRecords = (payload.detections || []).filter(item => ['Google Play', 'Apple App Store', 'Other'].includes(item.platform));
+        renderAppRiskCharts(appRecords);
+        const records = appRecords.slice(0, 5);
+        body.replaceChildren();
+        if (!records.length) { const row = body.insertRow(); const cell = row.insertCell(); cell.colSpan = 6; cell.className = 'text-center text-muted'; cell.textContent = 'No app analyses yet. Your submitted scans will appear here.'; return; }
+        records.forEach(item => {
+            const row = body.insertRow();
+            const appCell = row.insertCell(); appCell.textContent = item.target_name || 'App listing';
+            const platformCell = row.insertCell(); platformCell.textContent = item.platform || 'Other';
+            const scoreCell = row.insertCell(); scoreCell.textContent = `${item.risk_score ?? 0}/100`;
+            const statusCell = row.insertCell();
+            const badge = document.createElement('span'); const riskLevel = item.risk_level === 'Critical' ? 'High' : (item.risk_level || 'Low');
+            badge.className = `scan-risk-level risk-${riskLevel.toLowerCase()}`; badge.textContent = riskLevel; statusCell.append(badge);
+            const timeCell = row.insertCell(); timeCell.textContent = item.created_at || '—';
+            const actionCell = row.insertCell(); const link = document.createElement('a'); link.href = `/detection/${encodeURIComponent(item.id)}`; link.className = 'btn btn-sm btn-outline-primary'; link.textContent = 'Review'; actionCell.append(link);
+        });
+    } catch {
+        body.textContent = 'Recent analyses are unavailable right now.';
+        document.getElementById('appDonutCaption').textContent = 'Risk distribution could not be loaded.';
+        document.getElementById('appTrendCaption').textContent = 'Scan trend could not be loaded.';
+    }
+}
+
+function appRiskLevel(record) {
+    const normalized = String(record.risk_level || '').toLowerCase();
+    if (normalized === 'critical' || normalized === 'high') return 'high';
+    if (normalized === 'medium') return 'medium';
+    return 'low';
+}
+
+function renderAppRiskCharts(records) {
+    const counts = {high: 0, medium: 0, low: 0};
+    records.forEach(record => { counts[appRiskLevel(record)] += 1; });
+    const total = records.length;
+    document.getElementById('appChartTotal').textContent = total;
+    document.getElementById('appChartHigh').textContent = counts.high;
+    document.getElementById('appChartMedium').textContent = counts.medium;
+    document.getElementById('appChartLow').textContent = counts.low;
+    document.getElementById('appDonutCaption').textContent = total
+        ? `${counts.high} high · ${counts.medium} medium · ${counts.low} low across ${total} saved ${total === 1 ? 'scan' : 'scans'}.`
+        : 'No app scans are recorded yet. Run a scan to start the risk analysis.';
+    drawAppRiskDonut(counts, total);
+    drawAppRiskTrend(records);
+}
+
+function drawAppRiskDonut(counts, total) {
+    const group = document.getElementById('appRiskDonutSegments');
+    const svgNamespace = 'http://www.w3.org/2000/svg';
+    const circumference = 2 * Math.PI * 66;
+    const gap = 3;
+    const colors = {high: '#e24a5a', medium: '#e8a329', low: '#24a879'};
+    group.replaceChildren();
+    if (!total) return;
+    let offset = 0;
+    ['high', 'medium', 'low'].forEach(level => {
+        if (!counts[level]) return;
+        const length = counts[level] / total * circumference;
+        const segment = document.createElementNS(svgNamespace, 'circle');
+        segment.setAttribute('cx', '90');
+        segment.setAttribute('cy', '90');
+        segment.setAttribute('r', '66');
+        segment.setAttribute('fill', 'none');
+        segment.setAttribute('stroke', colors[level]);
+        segment.setAttribute('stroke-width', '20');
+        segment.setAttribute('stroke-linecap', 'butt');
+        segment.setAttribute('stroke-dasharray', `${Math.max(0, length - gap)} ${circumference}`);
+        segment.setAttribute('stroke-dashoffset', String(-offset));
+        segment.setAttribute('class', `app-donut-segment ${level}`);
+        group.append(segment);
+        offset += length;
+    });
+}
+
+function drawAppRiskTrend(records) {
+    const svg = document.getElementById('appRiskTrend');
+    const namespace = 'http://www.w3.org/2000/svg';
+    const width = 560, height = 220;
+    const padding = {left: 34, right: 12, top: 14, bottom: 36};
+    const plotHeight = height - padding.top - padding.bottom;
+    const plotWidth = width - padding.left - padding.right;
+    const days = [];
+    for (let offset = 6; offset >= 0; offset--) {
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() - offset);
+        days.push(date);
+    }
+    const dayKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const daily = new Map(days.map(date => [dayKey(date), {high: 0, medium: 0, low: 0}]));
+    records.forEach(record => {
+        const rawDate = String(record.created_at || '');
+        const parsed = new Date(rawDate.includes('T') ? rawDate : rawDate.replace(' ', 'T'));
+        if (Number.isNaN(parsed.getTime())) return;
+        const bucket = daily.get(dayKey(parsed));
+        if (bucket) bucket[appRiskLevel(record)] += 1;
+    });
+    const maxCount = Math.max(1, ...Array.from(daily.values(), values => values.high + values.medium + values.low));
+    svg.replaceChildren();
+    const add = (tag, attributes, text) => {
+        const element = document.createElementNS(namespace, tag);
+        Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
+        if (text) element.textContent = text;
+        svg.append(element);
+        return element;
+    };
+    for (let step = 0; step <= 3; step++) {
+        const value = Math.ceil(maxCount * step / 3);
+        const y = padding.top + plotHeight - step * plotHeight / 3;
+        add('line', {x1: padding.left, y1: y, x2: width - padding.right, y2: y, class: 'app-chart-gridline'});
+        add('text', {x: padding.left - 8, y: y + 4, 'text-anchor': 'end', class: 'app-chart-axis-label'}, String(value));
+    }
+    const colors = {low: '#24a879', medium: '#e8a329', high: '#e24a5a'};
+    const barWidth = Math.min(30, plotWidth / 12);
+    days.forEach((date, index) => {
+        const x = padding.left + plotWidth * (index + 0.5) / days.length;
+        const values = daily.get(dayKey(date));
+        let yBottom = padding.top + plotHeight;
+        ['low', 'medium', 'high'].forEach(level => {
+            const segmentHeight = values[level] / maxCount * plotHeight;
+            if (!segmentHeight) return;
+            yBottom -= segmentHeight;
+            add('rect', {x: x - barWidth / 2, y: yBottom, width: barWidth, height: segmentHeight, rx: 3, fill: colors[level], class: `app-trend-bar ${level}`});
+        });
+        add('text', {x, y: height - 9, 'text-anchor': 'middle', class: 'app-chart-axis-label'}, date.toLocaleDateString(undefined, {weekday: 'short'}));
+    });
+    const lastSeven = Array.from(daily.values()).reduce((sum, values) => sum + values.high + values.medium + values.low, 0);
+    document.getElementById('appTrendCaption').textContent = lastSeven
+        ? `${lastSeven} app ${lastSeven === 1 ? 'scan' : 'scans'} in the last seven days.`
+        : 'No app scans were recorded in the last seven days.';
+}
+loadRecentAppAnalyses();
 
 async function readScanResponse(response) {
     const body = await response.text();
