@@ -68,7 +68,7 @@ def settings_page():
 
 @app.route("/language/<language>")
 def set_language(language):
-    if language not in {"en", "hi", "de", "te"}:
+    if language not in {"en", "hi", "te"}:
         language = "en"
     session["language"] = language
     next_path = request.referrer or url_for("home")
