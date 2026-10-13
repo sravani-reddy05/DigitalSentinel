@@ -17,7 +17,7 @@
                 <div><h3>Sentinel Assistant</h3><p>Security education and risk explanations</p></div>
                 <label class="visually-hidden" for="voiceLanguage">Assistant language</label>
                 <select id="voiceLanguage" class="form-select form-select-sm ms-auto" style="max-width:155px">
-                    <option value="en-US">English</option><option value="hi-IN">Hindi</option><option value="es-ES">Spanish</option><option value="fr-FR">French</option><option value="de-DE">German</option><option value="te-IN">Telugu</option>
+                    <option value="en-US">English</option><option value="hi-IN">Hindi</option><option value="te-IN">Telugu</option>
                 </select>
             </div>
 
@@ -83,6 +83,13 @@ document.getElementById('chatForm').addEventListener('submit', async event => {
     const message = chatInput.value.trim();
     if (!message) return;
 
+    const history = Array.from(chatMessages.querySelectorAll('.user-bubble, .assistant-bubble'))
+        .map(bubble => ({
+            role: bubble.classList.contains('user-bubble') ? 'user' : 'assistant',
+            content: bubble.textContent.trim()
+        }))
+        .filter(item => item.content && item.content !== 'Thinking…')
+        .slice(-8);
     addChatBubble(message, 'user');
     chatInput.value = '';
     const waiting = addChatBubble('Thinking…', 'assistant');
@@ -93,15 +100,27 @@ document.getElementById('chatForm').addEventListener('submit', async event => {
         const response = await fetch('/api/assistant/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({message, language: document.getElementById('voiceLanguage').value.split('-')[0]})
+            body: JSON.stringify({
+                message,
+                language: document.getElementById('voiceLanguage').value.split('-')[0],
+                history
+            })
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Assistant request failed');
 
         waiting.textContent = result.reply || result.response || result.answer ||
             result.message || 'No response was returned.';
+        if (window.voiceReplyRequested && 'speechSynthesis' in window) {
+            window.voiceReplyRequested = false;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(waiting.textContent);
+            utterance.lang = document.getElementById('voiceLanguage').value;
+            window.speechSynthesis.speak(utterance);
+        }
     } catch (error) {
         waiting.textContent = `Unable to get a response: ${error.message}`;
+        window.voiceReplyRequested = false;
     } finally {
         sendButton.disabled = false;
         chatInput.focus();

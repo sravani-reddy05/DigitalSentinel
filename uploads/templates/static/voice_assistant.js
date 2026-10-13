@@ -31,7 +31,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (chatInput) {
                     chatInput.value = transcript;
-                    chatInput.focus();
+                    window.voiceReplyRequested = true;
+                    const chatForm = document.getElementById("chatForm");
+                    if (chatForm && chatForm.requestSubmit) {
+                        chatForm.requestSubmit();
+                    } else if (chatForm) {
+                        chatForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+                    }
                 }
             };
 

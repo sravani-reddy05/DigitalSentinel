@@ -7,6 +7,7 @@ import os
 from config import Config
 from database.db import initialize_database
 from database.seed_data import seed_database
+from database.models.user_model import create_user, get_user_by_email, verify_user_password
 
 from database.models.routes.dashboard_routes import dashboard_bp
 from database.models.routes.brand_routes import brand_bp
@@ -23,13 +24,32 @@ app.add_url_rule("/static/<path:filename>", endpoint="project_static", view_func
 
 # Load application configuration
 app.config.from_object(Config)
+app.secret_key = Config.SECRET_KEY
 
 
 @app.context_processor
 def template_settings():
+    user_email = session.get("user_email")
+    user = get_user_by_email(user_email) if user_email else None
     return {
         "current_language": session.get("language", "en"),
+        "current_user": user,
     }
+
+
+@app.before_request
+def require_login():
+    public_paths = {"/login", "/signup", "/logout", "/health", "/architecture"}
+    if request.path.startswith("/static/"):
+        return None
+    if request.path.startswith("/api/") and request.path != "/api/assistant/chat":
+        return None
+    if request.path.startswith("/language/"):
+        return None
+    if request.path in public_paths or request.path.startswith("/login") or request.path.startswith("/signup"):
+        return None
+    if request.path == "/" and not session.get("user_id"):
+        return redirect(url_for("login_page"))
 
 
 # Initialize database
@@ -49,9 +69,83 @@ app.register_blueprint(report_bp)
 app.register_blueprint(assistant_bp)
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        user = verify_user_password(email, password)
+        if user is None:
+            return render_template("login.html", auth_error="Invalid email or password. Please try again.", form_type="signin")
+
+        session.clear()
+        session["user_id"] = user["id"]
+        session["user_email"] = user["email"]
+        session["username"] = user["username"]
+        session["role"] = user["role"]
+        session["language"] = session.get("language", "en")
+        return redirect(url_for("home"))
+
+    return render_template("login.html", auth_error=None, form_type="signin")
+
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup_page():
+    if request.method == "POST":
+        username = (request.form.get("username") or "").strip()
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+        provider = (request.form.get("provider") or "email").strip().lower()
+
+        if provider == "google" and not email:
+            return render_template("login.html", auth_error="Please enter your Google email address.", form_type="signup")
+
+        if not username and provider == "email":
+            return render_template("login.html", auth_error="Please enter your full name.", form_type="signup")
+        if not email:
+            return render_template("login.html", auth_error="Please enter your email address.", form_type="signup")
+        if not password:
+            return render_template("login.html", auth_error="Please set a password.", form_type="signup")
+        if password != confirm_password and provider == "email":
+            return render_template("login.html", auth_error="Passwords do not match.", form_type="signup")
+        if len(password) < 8:
+            return render_template("login.html", auth_error="Password must be at least 8 characters long.", form_type="signup")
+
+        if not username:
+            username = email.split("@", 1)[0]
+
+        try:
+            create_user(username, email, password, role="analyst")
+        except ValueError as exc:
+            return render_template("login.html", auth_error=str(exc), form_type="signup")
+
+        user = verify_user_password(email, password)
+        if user is None:
+            return render_template("login.html", auth_error="Account created, but sign in was not successful. Please log in manually.", form_type="signin")
+
+        session.clear()
+        session["user_id"] = user["id"]
+        session["user_email"] = user["email"]
+        session["username"] = user["username"]
+        session["role"] = user["role"]
+        session["language"] = session.get("language", "en")
+        return redirect(url_for("home"))
+
+    return render_template("login.html", auth_error=None, form_type="signup")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login_page"))
+
+
 # Home page
 @app.route("/")
 def home():
+    if not session.get("user_id"):
+        return redirect(url_for("login_page"))
     from database.models.brand_model import get_all_brands
     return render_template("dashboard.html", brands=get_all_brands())
 
