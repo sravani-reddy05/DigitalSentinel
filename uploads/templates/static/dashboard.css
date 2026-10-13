@@ -144,6 +144,13 @@ body.app-monitor-page .page-content, body.social-monitor-page .page-content { ma
 .risk-donut>div { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
 .risk-donut strong { color:#26354e; font:800 25px Manrope,sans-serif; }.risk-donut small { color:#7b8799;font-size:10px; }
 .risk-legend { display:grid;gap:17px;min-width:105px; }.risk-legend>div { display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:8px;color:#637087;font-size:11px; }.risk-legend strong { color:#35435a;font-size:12px; }
+.dashboard-empty-state { min-height:205px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.dashboard-empty-state[hidden],.trend-chart-wrap[hidden],.risk-overview-body[hidden] { display:none; }
+.dashboard-empty-icon { display:grid;place-items:center;width:48px;height:48px;margin-bottom:10px;border-radius:15px;color:#5270d2;background:#edf2ff;font-size:22px; }
+.dashboard-empty-state strong { color:#34435c;font-size:13px; }
+.dashboard-empty-state p { max-width:235px;margin:5px 0 10px;color:#7b8799;font-size:10px;line-height:1.5; }
+.dashboard-empty-state a,.recent-empty a { color:#456bd1;font-size:10px;font-weight:700;text-decoration:none; }
+.recent-empty p { margin:0 0 10px; }
 .legend-dot { width:9px;height:9px;display:inline-block;border-radius:50%; }.high-dot { background:#f04455; }.medium-dot { background:#f5a623; }.low-dot { background:#17c995; }
 .chart-key { display:flex;flex-wrap:wrap;gap:9px;color:#65728a;font-size:9px; }.chart-key span { display:flex;align-items:center;gap:4px; }.chart-key .legend-dot { width:7px;height:7px; }
 .trend-chart-wrap { width:100%; overflow:hidden; }.trend-chart { display:block;width:100%;height:auto;min-height:190px;overflow:visible; }.chart-gridline { stroke:#e9edf4;stroke-width:1; }.chart-axis-label { fill:#8490a2;font:10px 'DM Sans',sans-serif; }

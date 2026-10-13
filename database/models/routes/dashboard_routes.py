@@ -1,5 +1,5 @@
 
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, session
 
 from database.db import fetch_all, fetch_one
 
@@ -15,25 +15,29 @@ def dashboard():
 @dashboard_bp.route("/api/dashboard/stats")
 def dashboard_stats():
     total = fetch_one(
-        "SELECT COUNT(*) AS count FROM detections"
+        "SELECT COUNT(*) AS count FROM detections WHERE user_id = ?",
+        (session["user_id"],)
     )["count"]
 
     high_risk = fetch_one(
         "SELECT COUNT(*) AS count FROM detections "
-        "WHERE risk_level = 'High'"
+        "WHERE user_id = ? AND risk_level IN ('High', 'Critical')",
+        (session["user_id"],)
     )["count"]
 
     needs_review = fetch_one(
         "SELECT COUNT(*) AS count FROM detections "
-        "WHERE status = 'Needs Review'"
+        "WHERE user_id = ? AND status = 'Needs Review'",
+        (session["user_id"],)
     )["count"]
 
     by_risk = fetch_all("""
         SELECT CASE WHEN risk_level = 'Critical' THEN 'High' ELSE risk_level END AS risk_level,
                COUNT(*) AS count
         FROM detections
+        WHERE user_id = ?
         GROUP BY CASE WHEN risk_level = 'Critical' THEN 'High' ELSE risk_level END
-    """)
+    """, (session["user_id"],))
     risk_counts = {row["risk_level"]: row["count"] for row in by_risk}
     trend_rows = fetch_all("""
         SELECT date(created_at) AS day, COUNT(*) AS total,
@@ -41,10 +45,10 @@ def dashboard_stats():
                SUM(CASE WHEN risk_level = 'Medium' THEN 1 ELSE 0 END) AS medium,
                SUM(CASE WHEN risk_level = 'Low' THEN 1 ELSE 0 END) AS low
         FROM detections
-        WHERE date(created_at) >= date('now', '-6 day')
+        WHERE user_id = ? AND date(created_at) >= date('now', '-6 day')
         GROUP BY date(created_at)
         ORDER BY day
-    """)
+    """, (session["user_id"],))
 
     return jsonify({
         "total_detections": total,
@@ -63,8 +67,9 @@ def recent_detections():
         SELECT id, target_name, platform, target_url,
                risk_score, risk_level, status, created_at
         FROM detections
+        WHERE user_id = ?
         ORDER BY created_at DESC
         LIMIT 10
-    """)
+    """, (session["user_id"],))
 
     return jsonify({"detections": rows})

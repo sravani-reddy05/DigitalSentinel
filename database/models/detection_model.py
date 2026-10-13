@@ -15,7 +15,8 @@ def create_detection(
     risk_level="Low",
     reasons=None,
     status="Needs Review",
-    is_official=False
+    is_official=False,
+    user_id=None
 ):
     """Save a detection result."""
 
@@ -45,9 +46,10 @@ def create_detection(
                 risk_level,
                 reasons,
                 status,
-                is_official
+                is_official,
+                user_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             brand_id,
             target_name.strip(),
@@ -60,7 +62,8 @@ def create_detection(
             risk_level,
             reasons_json,
             status,
-            int(is_official)
+            int(is_official),
+            user_id
         ))
 
         detection_id = cursor.lastrowid
@@ -71,15 +74,17 @@ def create_detection(
                 scan_type,
                 target_name,
                 risk_score,
-                result_status
+                result_status,
+                user_id
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
             brand_id,
             platform,
             target_name.strip(),
             risk_score,
-            "Official" if is_official else risk_level
+            "Official" if is_official else risk_level,
+            user_id
         ))
 
         connection.commit()
@@ -93,7 +98,8 @@ def create_detection(
 def get_all_detections(
     brand_id=None,
     platform=None,
-    status=None
+    status=None,
+    user_id=None
 ):
     """Retrieve detections with optional filters."""
 
@@ -108,6 +114,9 @@ def get_all_detections(
     """
 
     parameters = []
+    if user_id is not None:
+        query += " AND d.user_id = ?"
+        parameters.append(user_id)
 
     if brand_id is not None:
         query += " AND d.brand_id = ?"
@@ -153,7 +162,7 @@ def get_all_detections(
         connection.close()
 
 
-def get_detection_by_id(detection_id):
+def get_detection_by_id(detection_id, user_id=None):
     """Retrieve one detection by its ID."""
 
     connection = get_connection()
@@ -167,7 +176,8 @@ def get_detection_by_id(detection_id):
             JOIN brand_profiles AS b
                 ON d.brand_id = b.id
             WHERE d.id = ?
-        """, (detection_id,))
+              AND (? IS NULL OR d.user_id = ?)
+        """, (detection_id, user_id, user_id))
 
         row = cursor.fetchone()
 
@@ -192,7 +202,8 @@ def get_detection_by_id(detection_id):
 
 def update_detection_status(
     detection_id,
-    new_status
+    new_status,
+    user_id=None
 ):
     """Update the investigation status."""
 
@@ -214,9 +225,12 @@ def update_detection_status(
             UPDATE detections
             SET status = ?
             WHERE id = ?
+              AND (? IS NULL OR user_id = ?)
         """, (
             new_status,
-            detection_id
+            detection_id,
+            user_id,
+            user_id
         ))
 
         connection.commit()
@@ -227,7 +241,7 @@ def update_detection_status(
         connection.close()
 
 
-def delete_detection(detection_id):
+def delete_detection(detection_id, user_id=None):
     """Delete a detection record."""
 
     connection = get_connection()
@@ -236,7 +250,8 @@ def delete_detection(detection_id):
         cursor = connection.execute("""
             DELETE FROM detections
             WHERE id = ?
-        """, (detection_id,))
+              AND (? IS NULL OR user_id = ?)
+        """, (detection_id, user_id, user_id))
 
         connection.commit()
 

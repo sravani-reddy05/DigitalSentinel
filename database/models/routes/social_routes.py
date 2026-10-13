@@ -1,5 +1,5 @@
 
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, session
 from pathlib import Path
 
 from database.models.brand_model import get_brand
@@ -121,7 +121,8 @@ def scan_social_profile():
         risk_score=risk["risk_score"],
         risk_level=risk["risk_level"],
         reasons=risk["reasons"],
-        is_official=False
+        is_official=False,
+        user_id=session["user_id"]
     )
 
     return jsonify({

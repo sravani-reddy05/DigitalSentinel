@@ -25,8 +25,8 @@
 </section>
 
 <section class="row g-3 dashboard-analytics">
-    <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card h-100"><div class="section-heading"><div><h3>Risk Overview</h3><p>Distribution across all scans</p></div><span class="chart-period">All time</span></div><div class="risk-overview-body"><div class="risk-donut" id="riskDonut"><div><strong id="highRiskShare">0%</strong><small>High Risk</small></div></div><div class="risk-legend"><div><i class="legend-dot high-dot"></i><span>High Risk</span><strong id="legendHigh">0</strong></div><div><i class="legend-dot medium-dot"></i><span>Medium Risk</span><strong id="legendMedium">0</strong></div><div><i class="legend-dot low-dot"></i><span>Low Risk</span><strong id="legendLow">0</strong></div></div></div></article></div>
-    <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card h-100"><div class="section-heading"><div><h3>Threat Trend</h3><p>Daily scans · last 7 days</p></div><div class="chart-key"><span><i class="legend-dot high-dot"></i>High</span><span><i class="legend-dot medium-dot"></i>Medium</span><span><i class="legend-dot low-dot"></i>Low</span></div></div><div class="trend-chart-wrap"><svg id="trendChart" class="trend-chart" viewBox="0 0 520 220" role="img" aria-label="Daily scan risk trend for the last seven days"></svg></div></article></div>
+    <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card h-100"><div class="section-heading"><div><h3>Risk Overview</h3><p>Distribution across your scans</p></div><span class="chart-period">All time</span></div><div class="risk-overview-body" id="riskOverviewChart"><div class="risk-donut" id="riskDonut"><div><strong id="highRiskShare">0%</strong><small>High Risk</small></div></div><div class="risk-legend"><div><i class="legend-dot high-dot"></i><span>High Risk</span><strong><span id="legendHigh">0</span> <small id="legendHighPercent">0%</small></strong></div><div><i class="legend-dot medium-dot"></i><span>Medium Risk</span><strong><span id="legendMedium">0</span> <small id="legendMediumPercent">0%</small></strong></div><div><i class="legend-dot low-dot"></i><span>Low Risk</span><strong><span id="legendLow">0</span> <small id="legendLowPercent">0%</small></strong></div></div></div><div class="dashboard-empty-state" id="riskOverviewEmpty" hidden><span class="dashboard-empty-icon"><i class="bi bi-pie-chart"></i></span><strong>No scan data yet</strong><p>Risk distribution will appear here after your first scan.</p><a href="/social-monitor">Run your first scan <i class="bi bi-arrow-right"></i></a></div></article></div>
+    <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card h-100"><div class="section-heading"><div><h3>Threat Trend</h3><p>Daily scans · last 7 days</p></div><div class="chart-key"><span><i class="legend-dot high-dot"></i>High</span><span><i class="legend-dot medium-dot"></i>Medium</span><span><i class="legend-dot low-dot"></i>Low</span></div></div><div class="trend-chart-wrap" id="trendChartWrap"><svg id="trendChart" class="trend-chart" viewBox="0 0 520 220" role="img" aria-label="Daily scan risk trend for the last seven days"></svg></div><div class="dashboard-empty-state" id="trendEmpty" hidden><span class="dashboard-empty-icon"><i class="bi bi-graph-up"></i></span><strong>No recent scans</strong><p>Your personal scan trend will appear here after you run an analysis.</p><a href="/social-monitor">Start an analysis <i class="bi bi-arrow-right"></i></a></div></article></div>
     <div class="col-12 col-lg-4"><article class="content-card dashboard-chart-card recent-threats-card h-100"><div class="section-heading"><div><h3>Recent Detections</h3><p>Latest profiles and listings</p></div><a href="/detections" class="text-link">View All <i class="bi bi-arrow-right"></i></a></div><div id="recentDetections" class="recent-detection-list"><p class="text-muted">Loading detections…</p></div></article></div>
 </section>
 
@@ -46,7 +46,7 @@ async function loadDashboard() {
         if (!statsResponse.ok || !recentResponse.ok) throw new Error('Dashboard data unavailable');
         const stats = await statsResponse.json(), recent = await recentResponse.json();
         const counts = stats.risk_counts || {};
-        const high = Number(counts.High ?? stats.high_risk ?? 0), medium = Number(counts.Medium ?? stats.medium_risk ?? 0), low = Number(counts.Low ?? stats.low_risk ?? 0), total = Number(stats.total_detections ?? 0);
+        const high = Number(counts.High ?? stats.high_risk ?? 0), medium = Number(counts.Medium ?? stats.medium_risk ?? 0), low = Number(counts.Low ?? stats.low_risk ?? 0), total = high + medium + low;
         document.getElementById('highDetections').textContent = high;
         document.getElementById('mediumDetections').textContent = medium;
         document.getElementById('lowDetections').textContent = low;
@@ -54,10 +54,23 @@ async function loadDashboard() {
         document.getElementById('legendHigh').textContent = high;
         document.getElementById('legendMedium').textContent = medium;
         document.getElementById('legendLow').textContent = low;
-        document.getElementById('highRiskShare').textContent = `${total ? Math.round(high * 100 / total) : 0}%`;
-        const highPct = total ? high * 100 / total : 0, medPct = total ? medium * 100 / total : 0;
-        document.getElementById('riskDonut').style.background = total ? `conic-gradient(#f04455 0 ${highPct}%, #f5a623 ${highPct}% ${highPct + medPct}%, #17c995 ${highPct + medPct}% 100%)` : '#e8edf5';
-        drawThreatTrend(stats.trend || []);
+        const highPct = total ? Math.round(high * 100 / total) : 0;
+        const mediumPct = total ? Math.round(medium * 100 / total) : 0;
+        const lowPct = total ? Math.max(0, 100 - highPct - mediumPct) : 0;
+        document.getElementById('highRiskShare').textContent = `${highPct}%`;
+        document.getElementById('legendHighPercent').textContent = `${highPct}%`;
+        document.getElementById('legendMediumPercent').textContent = `${mediumPct}%`;
+        document.getElementById('legendLowPercent').textContent = `${lowPct}%`;
+        const highSlice = total ? high * 100 / total : 0;
+        const mediumSlice = total ? medium * 100 / total : 0;
+        document.getElementById('riskDonut').style.background = total
+            ? `conic-gradient(#f04455 0 ${highSlice}%, #f5a623 ${highSlice}% ${highSlice + mediumSlice}%, #17c995 ${highSlice + mediumSlice}% 100%)`
+            : '#e8edf5';
+        document.getElementById('riskOverviewEmpty').hidden = total > 0;
+        const trend = stats.trend || [];
+        const hasRecentScans = trend.some(day => Number(day.total) > 0);
+        document.getElementById('trendEmpty').hidden = hasRecentScans;
+        drawThreatTrend(trend);
         renderRecentDetections(recent.detections || []);
         setupBrandSelector();
     } catch (error) {
@@ -66,7 +79,19 @@ async function loadDashboard() {
 }
 function renderRecentDetections(items) {
     const target = document.getElementById('recentDetections'); target.replaceChildren();
-    if (!items.length) { target.textContent = window.dsTranslate('No scans yet. Start an analysis to see findings here.'); return; }
+    if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'recent-empty';
+        const message = document.createElement('p');
+        message.textContent = 'No scans in your history yet.';
+        const link = document.createElement('a');
+        link.className = 'btn btn-sm btn-outline-primary';
+        link.href = '/social-monitor';
+        link.textContent = 'Run your first scan';
+        empty.append(message, link);
+        target.append(empty);
+        return;
+    }
     items.slice(0, 4).forEach(item => {
         const level = item.risk_level === 'Critical' ? 'High' : (item.risk_level || 'Low');
         const row = document.createElement('a'); row.className = 'recent-detection-item'; row.href = `/detection/${encodeURIComponent(item.id)}`;

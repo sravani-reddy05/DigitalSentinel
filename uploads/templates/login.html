@@ -83,6 +83,9 @@
             {% if auth_error %}
             <div class="alert alert-danger">{{ auth_error }}</div>
             {% endif %}
+            {% if auth_status %}
+            <div class="alert alert-success">{{ auth_status }}</div>
+            {% endif %}
 
             <button type="button" class="btn btn-outline-dark social-button" id="googleAuthButton">
                 <i class="bi bi-google"></i> Continue with Google
@@ -98,6 +101,9 @@
                 <div class="mb-3">
                     <label class="form-label" for="signinPassword">Password</label>
                     <input class="form-control" id="signinPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+                </div>
+                <div class="text-end mb-3">
+                    <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
                 </div>
                 <button class="btn btn-primary w-100" type="submit">Sign In</button>
             </form>

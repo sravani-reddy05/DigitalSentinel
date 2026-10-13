@@ -54,10 +54,14 @@ CREATE TABLE IF NOT EXISTS detections (
     reasons TEXT,
     status TEXT DEFAULT 'Needs Review',
     is_official INTEGER DEFAULT 0,
+    user_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (brand_id)
         REFERENCES brand_profiles(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (user_id)
+        REFERENCES users(id)
         ON DELETE CASCADE
 );
 
@@ -73,11 +77,15 @@ CREATE TABLE IF NOT EXISTS scan_history (
     target_name TEXT,
     risk_score INTEGER DEFAULT 0,
     result_status TEXT,
+    user_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (brand_id)
         REFERENCES brand_profiles(id)
-        ON DELETE SET NULL
+        ON DELETE SET NULL,
+    FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
 );
 
 
@@ -90,6 +98,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    password_reset_nonce TEXT,
     role TEXT DEFAULT 'analyst',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

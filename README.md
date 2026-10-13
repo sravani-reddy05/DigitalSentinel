@@ -122,11 +122,18 @@ pip install -r requirements.txt
 Create a `.env` file in the project root and add the environment variables required by your application.
 
 ```env
-# Add your required environment variables here
-# Never commit real API keys or secrets
+SECRET_KEY=replace-with-a-long-random-secret
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=
+SMTP_USE_TLS=true
 ```
 
-Use the actual variable names expected by your code. Do not share API keys publicly.
+Configure SMTP for the **Forgot password** flow. Reset links expire after one hour and can only be used once. Keep the SMTP password and application `SECRET_KEY` private.
+
+Detection history, dashboard statistics, and reports are private to the signed-in user who ran each scan. Older detections created before account ownership was added remain unassigned and are not shown to any user's private history.
 
 ### 5. Run the Application
 

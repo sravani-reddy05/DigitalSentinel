@@ -1,5 +1,5 @@
 
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, session
 
 from database.models.detection_model import (
     get_all_detections,
@@ -26,7 +26,7 @@ def detections_page():
 
 @detection_bp.route("/detection/<int:detection_id>")
 def detection_details_page(detection_id):
-    detection = get_detection_by_id(detection_id)
+    detection = get_detection_by_id(detection_id, user_id=session["user_id"])
 
     if not detection:
         return render_template("404.html"), 404
@@ -44,7 +44,8 @@ def list_detections():
 
     detections = get_all_detections(
         platform=platform or None,
-        status=status or None
+        status=status or None,
+        user_id=session["user_id"]
     )
 
     return jsonify({"detections": detections})
@@ -55,7 +56,7 @@ def list_detections():
     methods=["GET"]
 )
 def detection_details(detection_id):
-    detection = get_detection_by_id(detection_id)
+    detection = get_detection_by_id(detection_id, user_id=session["user_id"])
 
     if not detection:
         return jsonify({"error": "Detection not found"}), 404
@@ -68,10 +69,10 @@ def detection_details(detection_id):
     methods=["DELETE"]
 )
 def remove_detection(detection_id):
-    if not get_detection_by_id(detection_id):
+    if not get_detection_by_id(detection_id, user_id=session["user_id"]):
         return jsonify({"error": "Detection not found"}), 404
 
-    if not delete_detection(detection_id):
+    if not delete_detection(detection_id, user_id=session["user_id"]):
         return jsonify({"error": "Could not delete detection"}), 500
 
     return jsonify({
@@ -94,11 +95,13 @@ def change_detection_status(detection_id):
             "allowed_statuses": sorted(ALLOWED_STATUSES)
         }), 400
 
-    detection = get_detection_by_id(detection_id)
+    detection = get_detection_by_id(detection_id, user_id=session["user_id"])
     if not detection:
         return jsonify({"error": "Detection not found"}), 404
 
-    updated = update_detection_status(detection_id, new_status)
+    updated = update_detection_status(
+        detection_id, new_status, user_id=session["user_id"]
+    )
 
     if not updated:
         return jsonify({

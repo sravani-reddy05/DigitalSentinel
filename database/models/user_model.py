@@ -108,3 +108,44 @@ def verify_user_password(email, password):
         "email": user["email"],
         "role": user["role"]
     }
+
+
+def set_password_reset_nonce(user_id, nonce):
+    connection = get_connection()
+    try:
+        connection.execute(
+            "UPDATE users SET password_reset_nonce = ? WHERE id = ?",
+            (nonce, user_id),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def get_user_for_password_reset(user_id, nonce):
+    connection = get_connection()
+    try:
+        row = connection.execute(
+            "SELECT id FROM users WHERE id = ? AND password_reset_nonce = ?",
+            (user_id, nonce),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        connection.close()
+
+
+def update_user_password(user_id, password):
+    if len(password or "") < 8:
+        raise ValueError("Password must contain at least 8 characters.")
+
+    password_hash = generate_password_hash(password)
+    connection = get_connection()
+    try:
+        cursor = connection.execute(
+            "UPDATE users SET password_hash = ?, password_reset_nonce = NULL WHERE id = ?",
+            (password_hash, user_id),
+        )
+        connection.commit()
+        return cursor.rowcount > 0
+    finally:
+        connection.close()

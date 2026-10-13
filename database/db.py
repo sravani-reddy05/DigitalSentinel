@@ -20,6 +20,7 @@ def get_connection():
     )
 
     connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
 
     return connection
 
@@ -39,6 +40,33 @@ def initialize_database():
 
     try:
         connection.executescript(schema)
+        detection_columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(detections)")
+        }
+        if "user_id" not in detection_columns:
+            connection.execute("ALTER TABLE detections ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE")
+
+        scan_history_columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(scan_history)")
+        }
+        if "user_id" not in scan_history_columns:
+            connection.execute("ALTER TABLE scan_history ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE")
+
+        user_columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(users)")
+        }
+        if "password_reset_nonce" not in user_columns:
+            connection.execute("ALTER TABLE users ADD COLUMN password_reset_nonce TEXT")
+
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_detections_user ON detections(user_id)"
+        )
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_scan_history_user ON scan_history(user_id)"
+        )
         connection.commit()
     finally:
         connection.close()

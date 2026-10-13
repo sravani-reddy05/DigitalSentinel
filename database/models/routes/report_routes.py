@@ -2,7 +2,7 @@
 import csv
 import io
 
-from flask import Blueprint, jsonify, render_template, Response
+from flask import Blueprint, jsonify, render_template, Response, session
 
 from database.db import fetch_all, fetch_one
 
@@ -17,32 +17,38 @@ def reports_page():
 @report_bp.route("/api/reports/summary")
 def report_summary():
     total = fetch_one(
-        "SELECT COUNT(*) AS count FROM detections"
+        "SELECT COUNT(*) AS count FROM detections WHERE user_id = ?",
+        (session["user_id"],)
     )["count"]
     pending = fetch_one(
-        "SELECT COUNT(*) AS count FROM detections WHERE status = 'Needs Review'"
+        "SELECT COUNT(*) AS count FROM detections "
+        "WHERE user_id = ? AND status = 'Needs Review'",
+        (session["user_id"],)
     )["count"]
 
     by_platform = fetch_all("""
         SELECT platform, COUNT(*) AS count
         FROM detections
+        WHERE user_id = ?
         GROUP BY platform
         ORDER BY count DESC
-    """)
+    """, (session["user_id"],))
 
     by_risk = fetch_all("""
         SELECT risk_level, COUNT(*) AS count
         FROM detections
+        WHERE user_id = ?
         GROUP BY risk_level
         ORDER BY count DESC
-    """)
+    """, (session["user_id"],))
 
     by_status = fetch_all("""
         SELECT status, COUNT(*) AS count
         FROM detections
+        WHERE user_id = ?
         GROUP BY status
         ORDER BY count DESC
-    """)
+    """, (session["user_id"],))
 
     return jsonify({
         "total_detections": total,
@@ -60,8 +66,9 @@ def export_report_csv():
                publisher, name_similarity, risk_score,
                risk_level, status, created_at
         FROM detections
+        WHERE user_id = ?
         ORDER BY created_at DESC
-    """)
+    """, (session["user_id"],))
 
     output = io.StringIO()
     columns = [
